@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>HttpServlet中service方法的源码分析 | 博客主页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Servlet">
+    <meta name="description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
+<meta name="keywords" content="Servlet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HttpServlet中service方法的源码分析">
+<meta property="og:url" content="https://tewuyiang.github.io/HttpServlet中service方法源码解读/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-24T06:04:59.858Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HttpServlet中service方法的源码分析">
+<meta name="twitter:description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
+    
+        <link rel="alternate" type="application/atom+xml" title="博客主页" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">HttpServlet中service方法的源码分析</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">HttpServlet中service方法的源码分析</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-07-24T03:49:09.000Z" itemprop="datePublished" class="page-time">
+  2019-07-24
+</time>
+
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#介绍"><span class="post-toc-number">2.</span> <span class="post-toc-text">介绍</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#源码"><span class="post-toc-number">3.</span> <span class="post-toc-text">源码</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#源码解读"><span class="post-toc-number">4.</span> <span class="post-toc-text">源码解读</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#对于Get类型的请求"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">对于Get类型的请求</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#对于Post类型的请求"><span class="post-toc-number">4.2.</span> <span class="post-toc-text">对于Post类型的请求</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#源码下载地址"><span class="post-toc-number">5.</span> <span class="post-toc-text">源码下载地址</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#参考文献"><span class="post-toc-number">6.</span> <span class="post-toc-text">参考文献</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-HttpServlet中service方法源码解读"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">HttpServlet中service方法的源码分析</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-07-24 11:49:09" datetime="2019-07-24T03:49:09.000Z"  itemprop="datePublished">2019-07-24</time>
+
+            
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>&ensp;&ensp;&ensp;&ensp;最近在看《Head First Servlet &amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——<strong>service方法</strong>。</p>
+<br>
+
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>&ensp;&ensp;&ensp;&ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程，并调用servlet的service（）方法，这个方法不需要程序员编写，而是继承自父类HttpServlet（当然，servlet不一定继承HttpServlet，也可以是实现其它协议的servlet类，但是大部分情况是Http协议）；</p>
+<p>&ensp;&ensp;&ensp;&ensp;在service（）方法中，会查看请求的类型（Get，Post……），根据请求的类型，调用servlet中对应的方法，如doGet（）、doPost（）……下面就来看看HttpServlet类中service（）方法的源码。</p>
+<br>
+
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">service</span><span class="params">(HttpServletRequest req, HttpServletResponse resp)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> ServletException, IOException</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        String method = req.getMethod();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (method.equals(METHOD_GET)) &#123;	<span class="comment">//若为Get请求</span></span><br><span class="line">            <span class="keyword">long</span> lastModified = getLastModified(req);</span><br><span class="line">            <span class="keyword">if</span> (lastModified == -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="comment">// servlet doesn't support if-modified-since, no reason</span></span><br><span class="line">                <span class="comment">// to go through further expensive logic</span></span><br><span class="line">                doGet(req, resp);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">long</span> ifModifiedSince = req.getDateHeader(HEADER_IFMODSINCE);</span><br><span class="line">                <span class="keyword">if</span> (ifModifiedSince &lt; lastModified) &#123;</span><br><span class="line">                    <span class="comment">// If the servlet mod time is later, call doGet()</span></span><br><span class="line">                    <span class="comment">// Round down to the nearest second for a proper compare</span></span><br><span class="line">                    <span class="comment">// A ifModifiedSince of -1 will always be less</span></span><br><span class="line">                    maybeSetLastModified(resp, lastModified);</span><br><span class="line">                    doGet(req, resp);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_HEAD)) &#123;</span><br><span class="line">            <span class="keyword">long</span> lastModified = getLastModified(req);</span><br><span class="line">            maybeSetLastModified(resp, lastModified);</span><br><span class="line">            doHead(req, resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_POST)) &#123;</span><br><span class="line">            doPost(req, resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_PUT)) &#123;</span><br><span class="line">            doPut(req, resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_DELETE)) &#123;</span><br><span class="line">            doDelete(req, resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_OPTIONS)) &#123;</span><br><span class="line">            doOptions(req,resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.equals(METHOD_TRACE)) &#123;</span><br><span class="line">            doTrace(req,resp);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//</span></span><br><span class="line">            <span class="comment">// Note that this means NO servlet supports whatever</span></span><br><span class="line">            <span class="comment">// method was requested, anywhere on this server.</span></span><br><span class="line">            <span class="comment">//</span></span><br><span class="line"></span><br><span class="line">            String errMsg = lStrings.getString(<span class="string">"http.method_not_implemented"</span>);</span><br><span class="line">            Object[] errArgs = <span class="keyword">new</span> Object[<span class="number">1</span>];</span><br><span class="line">            errArgs[<span class="number">0</span>] = method;</span><br><span class="line">            errMsg = MessageFormat.format(errMsg, errArgs);</span><br><span class="line"></span><br><span class="line">            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, errMsg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h2 id="源码解读"><a href="#源码解读" class="headerlink" title="源码解读"></a>源码解读</h2><h3 id="对于Get类型的请求"><a href="#对于Get类型的请求" class="headerlink" title="对于Get类型的请求"></a>对于Get类型的请求</h3><p>&ensp;&ensp;&ensp;&ensp;在上面的源代码中，若请求是Get类型的，那service（）方法首先调用了<strong>getLastModified（）</strong>方法，获取了一个值赋给lastModified变量，这个东西是什么呢？</p>
+<p>&ensp;&ensp;&ensp;&ensp;首先要知道一个东西，叫做<strong>If-Modified-Since</strong>（源码的注释中也有提到），这是Http请求的一个请求头标签，记录的是你现在请求的文件，在上一次你请求的时候，服务器上最后修改它的时间。所以，前提是你之前已经请求过这个文件，浏览器中存有这个页面的缓存，才有这个值。而源码中的<strong>getLastModified（）</strong>方法，就是用来获取这个值的。</p>
+<p>&ensp;&ensp;&ensp;&ensp;对于第一次请求的文件，浏览器请求中是没有<strong>If-Modified-Since</strong>的，所以在上面的源码中，若是第一次请求，<strong>getLastModified（）</strong>返回的是-1，表示是第一次请求，则直接调用doGet方法，获取服务器中的文件，而这时在浏览器中，也获得了请求的文件在服务器中最后被修改的时间；</p>
+<p>&ensp;&ensp;&ensp;&ensp;而对于不是第一次的请求，浏览器会将<strong>If-Modified-Since</strong>通过请求发送到服务器，service（）方法调用<strong>getLastModified（）</strong>方法获取到了发送来的这个值；然后它要判断一件事，那就是在你上次请求到这次请求之间，这个文件在服务器上是否被修改了，若被修改，则调用doGet（），重新获取一次，若没有被修改，则直接使用你浏览器中这个文件的缓存。</p>
+<p>&ensp;&ensp;&ensp;&ensp;那service方法是怎么做到这个操作的呢。看上面的源代码，若<strong>getLastModified（）</strong>方法获取到的值不是-1，则表示你之前请求过这个页面，并在浏览器中有缓存。然后，service（）方法调用<strong><em>req.getDateHeader(HEADER_IFMODSINCE)</em></strong>，获取服务器上，你请求文件的最后修改时间，并与你传来的最后修改时间进行比较（两者都是long类型，表示时间的毫秒值），若<strong>服务器上的最后修改时间 &gt; 你传来的最后修改时间</strong>，则表示在你上次请求之后，这个文件被修改过，所以不能直接使用缓存，于是service（）方法调用doGet（）方法重新获取此文件，而浏览器的缓存以及<strong>If-Modified-Since</strong>也将得到更新；若<strong>服务器上的最后修改时间 == 你传来的最后修改时间</strong>，表示这个文件没有被修改，service（）方法调用<strong><em>resp.setStatus()</em></strong>方法    ，为响应设置状态码304（HttpServletResponse.SC_NOT_MODIFIED == 304），告诉浏览器可以直接使用缓存。</p>
+<h3 id="对于Post类型的请求"><a href="#对于Post类型的请求" class="headerlink" title="对于Post类型的请求"></a>对于Post类型的请求</h3><p>&ensp;&ensp;&ensp;&ensp;对于Post类型的请求，service（）方法都是直接调用doPost（）方法，因为Post请求在标准中被规定用来对服务器中的内容进行修改，所以没有必要考虑缓存（个人理解）。当然，还有其它6种请求，但是基本上不用，我也不是很懂，这里就不说了。</p>
+<br>
+
+
+
+<h2 id="源码下载地址"><a href="#源码下载地址" class="headerlink" title="源码下载地址"></a>源码下载地址</h2><p><a href="http://www.java2s.com/Code/JarDownload/javax.servlet/javax.servlet-api-3.0.1-sources.jar.zip" target="_blank" rel="noopener">http://www.java2s.com/Code/JarDownload/javax.servlet/javax.servlet-api-3.0.1-sources.jar.zip</a></p>
+<br>
+
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://www.cnblogs.com/moxiaotao/p/9670109.html" target="_blank" rel="noopener">https://www.cnblogs.com/moxiaotao/p/9670109.html</a></p>
+<p><a href="https://www.2cto.com/kf/201705/638441.html" target="_blank" rel="noopener">https://www.2cto.com/kf/201705/638441.html</a></p>
+<p>《Head First Servlet &amp; JSP》</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2019-07-24T06:04:59.858Z" itemprop="dateUpdated">2019-07-24 14:04:59</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Servlet/">Servlet</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&title=《HttpServlet中service方法的源码分析》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&title=《HttpServlet中service方法的源码分析》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HttpServlet中service方法源码解读/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HttpServlet中service方法的源码分析》 — 博客主页&url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/根据先序遍历和中序遍历建立二叉树/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">根据先序遍历和中序遍历建立二叉树</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2019</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&title=《HttpServlet中service方法的源码分析》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&title=《HttpServlet中service方法的源码分析》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HttpServlet中service方法源码解读/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HttpServlet中service方法的源码分析》 — 博客主页&url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HttpServlet中service方法源码解读/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/HttpServlet中service方法源码解读/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
