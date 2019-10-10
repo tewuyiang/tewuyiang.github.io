@@ -20,16 +20,16 @@
     <meta name="theme-color" content="#3F51B5">
     
     
-    <meta name="keywords" content="Servlet">
+    <meta name="keywords" content="JavaWeb">
     <meta name="description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
-<meta name="keywords" content="Servlet">
+<meta name="keywords" content="JavaWeb">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HttpServlet中service方法的源码分析">
 <meta property="og:url" content="https://tewuyiang.github.io/HttpServlet中service方法源码解读/index.html">
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-07-24T06:18:32.612Z">
+<meta property="og:updated_time" content="2019-10-10T05:22:32.939Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HttpServlet中service方法的源码分析">
 <meta name="twitter:description" content="前言&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;最近在看《Head First Servlet &amp;amp; JSP》这本书，  对servlet有了更加深入的理解。今天就来写一篇博客，谈一谈Servlet中一个重要的方法——service方法。   介绍&amp;ensp;&amp;ensp;&amp;ensp;&amp;ensp;当浏览器对servlet发起请求时，web容器会开启一个新的线程，或者是从线程池中分配一个线程">
@@ -133,7 +133,7 @@
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
                 <i class="icon icon-lg icon-chevron-left"></i>
             </a>
-            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
                 <i class="icon icon-lg icon-search"></i>
             </a>
@@ -156,6 +156,8 @@
   2019-07-24
 </time>
 
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaWeb/">JavaWeb</a></li></ul>
 
             
         </h5>
@@ -186,6 +188,8 @@
             <time class="post-time" title="2019-07-24 11:49:09" datetime="2019-07-24T03:49:09.000Z"  itemprop="datePublished">2019-07-24</time>
 
             
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaWeb/">JavaWeb</a></li></ul>
+
 
 
             
@@ -231,7 +235,7 @@
     <div class="content">
         
 <span class="post-time">
-    Last updated: <time datetime="2019-07-24T06:18:32.612Z" itemprop="dateUpdated">2019-07-24 14:18:32</time>
+    最終更新：<time datetime="2019-10-10T05:22:32.939Z" itemprop="dateUpdated">2019-10-10 13:22:32</time>
 </span><br>
 
 
@@ -253,7 +257,7 @@
 
         <div class="post-footer">
             
-	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Servlet/">Servlet</a></li></ul>
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaWeb/">JavaWeb</a></li></ul>
 
 
             
@@ -308,7 +312,14 @@
     </div>
 
     
-<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/外部类对象.super()调用内部类的构造方法/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">继承内部类时使用外部类对象.super()调用内部类的构造方法</h4>
+      </a>
+    </div>
   
 
   
@@ -367,7 +378,7 @@
             
                 <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
             
-            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
         </p>
     </div>
     <div class="bottom">

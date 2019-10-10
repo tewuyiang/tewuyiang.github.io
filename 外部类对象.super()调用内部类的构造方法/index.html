@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>继承内部类时使用外部类对象.super()调用内部类的构造方法 | 博客主页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JavaSE">
+    <meta name="description" content="问题简介&amp;ensp;&amp;ensp;今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是外部类对象.super();   问题分析&amp;ensp;&amp;ensp;我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的">
+<meta name="keywords" content="JavaSE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="继承内部类时使用外部类对象.super()调用内部类的构造方法">
+<meta property="og:url" content="https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="问题简介&amp;ensp;&amp;ensp;今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是外部类对象.super();   问题分析&amp;ensp;&amp;ensp;我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-10-10T05:23:31.148Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="继承内部类时使用外部类对象.super()调用内部类的构造方法">
+<meta name="twitter:description" content="问题简介&amp;ensp;&amp;ensp;今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是外部类对象.super();   问题分析&amp;ensp;&amp;ensp;我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的">
+    
+        <link rel="alternate" type="application/atom+xml" title="博客主页" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">继承内部类时使用外部类对象.super()调用内部类的构造方法</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">继承内部类时使用外部类对象.super()调用内部类的构造方法</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-10-09T15:05:34.000Z" itemprop="datePublished" class="page-time">
+  2019-10-09
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#问题简介"><span class="post-toc-number">1.</span> <span class="post-toc-text">问题简介</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#问题分析"><span class="post-toc-number">2.</span> <span class="post-toc-text">问题分析</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#代码案例"><span class="post-toc-number">3.</span> <span class="post-toc-text">代码案例</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#代码解读"><span class="post-toc-number">4.</span> <span class="post-toc-text">代码解读</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#总结"><span class="post-toc-number">5.</span> <span class="post-toc-text">总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#参考文献"><span class="post-toc-number">6.</span> <span class="post-toc-text">参考文献</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-外部类对象.super()调用内部类的构造方法"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">继承内部类时使用外部类对象.super()调用内部类的构造方法</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-10-09 23:05:34" datetime="2019-10-09T15:05:34.000Z"  itemprop="datePublished">2019-10-09</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="问题简介"><a href="#问题简介" class="headerlink" title="问题简介"></a>问题简介</h2><p>&ensp;&ensp;<font size="4">今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是<strong><em>外部类对象.super();</em></strong></font></p>
+<br>
+
+<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><p>&ensp;&ensp;<font size="4">我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的构造方法，创建一个父类的对象，并用super关键字引用父类的对象。所以若一个类，它继承了一个内部类，那我们创建这个类的对象前，当然也必须创建一个其父类的对象，也就是这个内部类的对象。</font></p>
+<p>&ensp;&ensp;<font size="4">但是，麻烦的是，对于内部类来说，有一个规则，那就是每个内部类的对象，<strong>必定要绑定一个其外部类的对象</strong>，这就是在内部类中，能够调用外部类方法和操作外部类属性的原因。在我们平时创建内部类对象的时候，首先需要创建一个外部类对象，在使用 <strong>外部类对象.new 内部类()</strong> 语法来创建内部类对象，这时候内部类对象绑定的就是创建它的外部类对象。</font></p>
+<p>&ensp;&ensp;<font size="4">所以，当我们有一个类，它继承自一个内部类的时，我们要创建它的对象，需要满足两个条件：</font></p>
+<ol>
+<li><strong>在创建对象前，要先创建好它的父类对象，也就是它继承的内部类对象；</strong></li>
+<li><strong>想要创建内部类对象，你得先有这个内部类的外部类对象，以供他绑定；</strong></li>
+</ol>
+<p>&ensp;&ensp;<font size="4">于是出现了下面这种让人懵逼的代码：</font></p>
+<br>
+
+<h2 id="代码案例"><a href="#代码案例" class="headerlink" title="代码案例"></a>代码案例</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 外部类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Outer</span></span>&#123;</span><br><span class="line">    <span class="comment">// 内部类</span></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Inner</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 默认构造方法</span></span><br><span class="line">        Inner()&#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 带参构造方法</span></span><br><span class="line">        Inner(String string)&#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 继承类内部类的类</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test01</span> <span class="keyword">extends</span> <span class="title">Outer</span>.<span class="title">Inner</span></span>&#123;</span><br><span class="line">    <span class="comment">// 方式1：创建一个外部类Outer的对象，用来提供创建内部类所需的条件</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Outer outer2 = <span class="keyword">new</span> Outer();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 方式2：类的构造方法传入一个外部类的对象，用来提供创建内部类所需的条件</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Test01</span><span class="params">(Outer outer1)</span></span>&#123;</span><br><span class="line">        <span class="comment">// 通过外部类对象.super()调用内部类的构造方法</span></span><br><span class="line">        outer1.<span class="keyword">super</span>(<span class="string">"调用Inner的带参数构造方法"</span>);</span><br><span class="line">        <span class="comment">//也可以通过outer2调用</span></span><br><span class="line">        <span class="comment">// outer2.super("调用Inner的带参数构造方法");</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 创建一个外部类的对象</span></span><br><span class="line">        Outer outer = <span class="keyword">new</span> Outer();</span><br><span class="line">        <span class="comment">// 创建内部类的派生类对象，传入外部类的引用</span></span><br><span class="line">        Test01 test01 = <span class="keyword">new</span> Test01(outer);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h2 id="代码解读"><a href="#代码解读" class="headerlink" title="代码解读"></a>代码解读</h2><p>&ensp;&ensp;<font size="4">在上面的代码中我们可以看到，Test01继承了一个内部类，于是在它的构造函数中，我们需要给他提供一个外部类Outer的对象，使它在可以满足问题分析中所说的条件2。上面的代码使用了两种方式来提供外部类的对象：</font></p>
+<ol>
+<li><strong>将外部类对象作为构造方法的参数传递进来</strong>，也就是上面代码中的outer1；</li>
+<li><strong>为类创建一个静态的外部类成员</strong>，也就是上面代码中的outer2；</li>
+</ol>
+<p>&ensp;&ensp;<font size="4">提供了外部类Outer的对象后，创建Test01的对象时，需要一同创建的父类对象（也就是Inner）就有了可以绑定的外部类对象。然而存在一个问题，平常我们创建一个子类的对象时，构造方法中第一行会自动调用父类的构造方法，不许要我们写，但是这里却不行。因为这里的父类是一个内部类，这也就意味着编译器并不知道你想用哪个外部类对象去创建这个内部类的对象，你需要自己指定内部类绑定的外部类对象。于是，就有了上面的代码：<strong>使用 <em>外部类对象.super(参数)</em> 调用内部类的构造函数</strong>，创建内部类的对象，且这个内部类对象绑定的外部类对象就是调用构造函数的内部类对象。</font></p>
+<p>&ensp;&ensp;<font size="4">上面的代码中有两个外部类Outer的对象，使用哪个外部类对象，创建Test01对象时，一同创建的Inner对象绑定的就是哪个outer。除此之外，还有一个问题，若构造方法中有多行代码，那外部类.super语句一定得在第一行，这和创建普通类时super语句要在第一行类似。这也很好理解，<strong>因为父类的对象一定要在子类对象之前创建</strong>。</font></p>
+<br>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>&ensp;&ensp;<font size="4">总之最重要的就是记住，一个类继承了内部类时，在这个类中想要调用父类的构造方法，得使用<strong><em>外部类对象.super(参数)</em></strong>语法，且<strong>必须显示的写出来，编译器不会自己帮你加</strong>，否则将无法成功创建类的对象。</font></p>
+<br>
+
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><font size="4">《Java编程思想》</font></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最終更新：<time datetime="2019-10-10T05:23:31.148Z" itemprop="dateUpdated">2019-10-10 13:23:31</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaSE/">JavaSE</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/HttpServlet中service方法源码解读/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">HttpServlet中service方法的源码分析</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2019</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
