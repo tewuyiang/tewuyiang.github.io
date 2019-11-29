@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Java创建List、Map等集合对象的同时进行赋值操作 | 博客主页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JavaSE">
+    <meta name="description" content="问题简介&amp;ensp;&amp;ensp;在Java当中，若希望在创建数组的同时给数组赋值很简单，可以想下面这样： 12int[] num = &amp;#123;1,2,3&amp;#125;;String strs = &amp;#123;&quot;a&quot;, &quot;b&quot;, &quot;c&quot;&amp;#125;  &amp;ensp;&amp;ensp;但是，如果我们创建List集合，或者Map集合时，也想快速地为它赋初始值，应当如何做呢？   解决方式方式1：调用函数&amp;en">
+<meta name="keywords" content="JavaSE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java创建List、Map等集合对象的同时进行赋值操作">
+<meta property="og:url" content="https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="问题简介&amp;ensp;&amp;ensp;在Java当中，若希望在创建数组的同时给数组赋值很简单，可以想下面这样： 12int[] num = &amp;#123;1,2,3&amp;#125;;String strs = &amp;#123;&quot;a&quot;, &quot;b&quot;, &quot;c&quot;&amp;#125;  &amp;ensp;&amp;ensp;但是，如果我们创建List集合，或者Map集合时，也想快速地为它赋初始值，应当如何做呢？   解决方式方式1：调用函数&amp;en">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-11-29T15:28:14.609Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java创建List、Map等集合对象的同时进行赋值操作">
+<meta name="twitter:description" content="问题简介&amp;ensp;&amp;ensp;在Java当中，若希望在创建数组的同时给数组赋值很简单，可以想下面这样： 12int[] num = &amp;#123;1,2,3&amp;#125;;String strs = &amp;#123;&quot;a&quot;, &quot;b&quot;, &quot;c&quot;&amp;#125;  &amp;ensp;&amp;ensp;但是，如果我们创建List集合，或者Map集合时，也想快速地为它赋初始值，应当如何做呢？   解决方式方式1：调用函数&amp;en">
+    
+        <link rel="alternate" type="application/atom+xml" title="博客主页" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Java创建List、Map等集合对象的同时进行赋值操作</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Java创建List、Map等集合对象的同时进行赋值操作</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-11-28T15:25:47.000Z" itemprop="datePublished" class="page-time">
+  2019-11-28
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#问题简介"><span class="post-toc-number">1.</span> <span class="post-toc-text">问题简介</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#解决方式"><span class="post-toc-number">2.</span> <span class="post-toc-text">解决方式</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#方式1：调用函数"><span class="post-toc-number">2.0.1.</span> <span class="post-toc-text">方式1：调用函数</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#方式2：匿名内部类"><span class="post-toc-number">2.0.2.</span> <span class="post-toc-text">方式2：匿名内部类</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#博客总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">博客总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#参考文献"><span class="post-toc-number">4.</span> <span class="post-toc-text">参考文献</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-Java创建List对象同时进行赋值操作"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Java创建List、Map等集合对象的同时进行赋值操作</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-11-28 23:25:47" datetime="2019-11-28T15:25:47.000Z"  itemprop="datePublished">2019-11-28</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="问题简介"><a href="#问题简介" class="headerlink" title="问题简介"></a>问题简介</h2><p>&ensp;&ensp;在Java当中，若希望在创建数组的同时给数组赋值很简单，可以想下面这样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span>[] num = &#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;;</span><br><span class="line">String strs = &#123;<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;但是，如果我们创建List集合，或者Map集合时，也想快速地为它赋初始值，应当如何做呢？</p>
+<br>
+
+<h2 id="解决方式"><a href="#解决方式" class="headerlink" title="解决方式"></a>解决方式</h2><h4 id="方式1：调用函数"><a href="#方式1：调用函数" class="headerlink" title="方式1：调用函数"></a>方式1：调用函数</h4><p>&ensp;&ensp;请看如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ArrayList&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;(Arrays.asList(<span class="string">"aa"</span>, <span class="string">"bb"</span>, <span class="string">"cc"</span>));</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;<strong><em>Arrays.asList(T… a)</em></strong> 方法的参数是一个可变长参数，也就是说他能够传入一个数组，也能够传入多个参数，而它的作用就是将传入的数组或多个数据封装成List集合返回，而上面的代码就是接收返回的List集合，并将其作为参数传入ArrayList的构造方法，创建一个新的ArrayList对象。</p>
+<p>&ensp;&ensp;说到这里有人可能要问了，为什么不能直接将asList方法的返回值赋给list参数，而要将它传入构造器创建新的对象呢？这不是脱裤子放屁——多此一举吗。当然不是，请看下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 代码1</span></span><br><span class="line">List&lt;String&gt; list1 = Arrays.asList(<span class="string">"aa"</span>, <span class="string">"bb"</span>, <span class="string">"cc"</span>);</span><br><span class="line">list1.add(<span class="string">"dd"</span>);    <span class="comment">// UnsupportedOperationException</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 代码2</span></span><br><span class="line">String[] str = &#123;<span class="string">"a"</span>,<span class="string">"b"</span>,<span class="string">"c"</span>&#125;;</span><br><span class="line">List&lt;String&gt; list = Arrays.asList(str);</span><br><span class="line">str[<span class="number">0</span>] = <span class="string">"e"</span>;   <span class="comment">// list中的0号位置也一同改变</span></span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;上面有两段代码，看似没有问题，但是运行结果却和大家想象的有些不同。首先<em>代码1</em>，使用asList方法返回的创建的List对象，<strong><em>不允许进行修改操作</em></strong>，否则将会抛出一个<strong>UnsupportedOperationException</strong>；再来看<em>代码2</em>，我们将一个数组作为asList的参数，得到一个List对象，但是<strong><em>此时我们改变这个数组中元素的值，list对象的值也会发生改变</em></strong>，因为这个List对象底层引用的就是这个数组，并且和代码1一样，这个list也不能修改。</p>
+<p>&ensp;&ensp;但是，若我们将返回的List对象作为参数传入ArrayList的构造器中，这个问题就不会发生，因为ArrayList的构造器将会把传入的list中所有的元素<strong><em>复制一份</em></strong>，因此不会影响到原数组，且可以随意改变。</p>
+<br>
+
+<h4 id="方式2：匿名内部类"><a href="#方式2：匿名内部类" class="headerlink" title="方式2：匿名内部类"></a>方式2：匿名内部类</h4><p>&ensp;&ensp;这是一个非常机智的方式，就是看到了下面这行代码，我才忍不住写了这篇博客：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;String&gt;()&#123; &#123;add(<span class="string">"a"</span>); add(<span class="string">"b"</span>); add(<span class="string">"c"</span>);&#125; &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;乍一看是不是有点懵逼，我们将这段代码展开来看，就会清晰很多：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;String&gt;() &#123;</span><br><span class="line">            &#123;</span><br><span class="line">                add(<span class="string">"a"</span>);</span><br><span class="line">                add(<span class="string">"b"</span>);</span><br><span class="line">                add(<span class="string">"c"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;这下应该比之前容易理解了。这段代码就是创建了一个<strong><em>匿名内部类对象，且这个类继承自ArrayList</em></strong>，在这个匿名内部类中添加了一个<strong>非静态代码块</strong>，并在代码块中<strong>调用了三次add方法</strong>，为这个List对象赋值。</p>
+<p>&ensp;&ensp;我们知道，若我们想创建一个对象，可以直接<strong><em>new 构造方法</em></strong>，但是我们若想写一个匿名内部类，这个匿名内部类继承自某个类，只需在<strong><em>构造方法后面加上一对大括号</em></strong>。同时，<strong><em>非静态代码块会在构造方法执行前被执行</em></strong>，所以我们将赋值语句放在了代码块中，于是就有了上面这段代码。若还是看不明白，没关系，看下面这段代码十有八九就明白了，我们将上面的代码换另一种方式写出来：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; list = <span class="keyword">new</span> MyList();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 创建一个类继承自ArrayList</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyList</span> <span class="keyword">extends</span> <span class="title">ArrayList</span></span>&#123;</span><br><span class="line">    <span class="comment">// 在类的非静态代码块中编写赋值语句</span></span><br><span class="line">    &#123;</span><br><span class="line">        add(<span class="string">"a"</span>);</span><br><span class="line">        add(<span class="string">"b"</span>);</span><br><span class="line">        add(<span class="string">"c"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;以上代码就是最开始那句代码的完整版，创建一个MyList类（名字随意），继承自ArrayList，并编写一个非静态代码块调用三次add方法，这个代码块将会在构造方法执行前被执行，因此创建一个MyList对象后，它肯定已经有三条数据了。若到此时还没有听懂，可能就需要去了解一下匿名内部类，以及代码块的执行机制了。</p>
+<p>&ensp;&ensp;这种为集合赋值的好处就是，它可以用在任意一种集合类型上（Map，Set……），如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用此方法为map赋值</span></span><br><span class="line">HashMap&lt;String, Integer&gt; map = <span class="keyword">new</span> HashMap&lt;String, Integer&gt;() &#123; </span><br><span class="line">    		&#123;</span><br><span class="line">                put(<span class="string">"a"</span>, <span class="number">1</span>);</span><br><span class="line">                put(<span class="string">"b"</span>, <span class="number">2</span>); 	</span><br><span class="line">                put(<span class="string">"c"</span>, <span class="number">3</span>);</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>&ensp;&ensp;当然，这种方法也有一些弊端，就拿ArrayList来说，那就是这种方法得到的对象，它的类型并不是ArrayList，我们调用<strong>对象.getClass().getName()</strong>方法获取对象的类名，得到的是<strong>代码所在类的类名+$1</strong>（这里和匿名内部类的机制有关，就不详细叙述了）。所以在代码中，如果对对象的类型有着严格的要求，就需要谨慎考虑是否应该使用这种方式。</p>
+<br>
+
+<h2 id="博客总结"><a href="#博客总结" class="headerlink" title="博客总结"></a>博客总结</h2><p>&ensp;&ensp;在平常编写代码时，还是第一种方式使用的比较多，因为简单而且不容易产生问题；而第二种方，我个人建议还是少用（虽然我就是为第二种方式写的博客…..），因为在类型要求严格的程序中，可能会产生问题。当然，第二种方式真的非常机智（感叹），而且可以用在各种类型的集合上，学习一下还是很有帮助的。</p>
+<br>
+
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>《Java核心技术 卷Ⅰ》</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2019-11-29T15:28:14.609Z" itemprop="dateUpdated">2019-11-29 23:28:14</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaSE/">JavaSE</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&title=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&title=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/外部类对象.super()调用内部类的构造方法/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">继承内部类时使用外部类对象.super()调用内部类的构造方法</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2019</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&title=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&title=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java创建List、Map等集合对象的同时进行赋值操作》 — 博客主页&url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/Java创建List对象同时进行赋值操作/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
