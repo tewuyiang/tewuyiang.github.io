@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>如何去除链表中值重复的节点 | 博客主页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="数据结构与算法">
+    <meta name="description" content="前言&amp;emsp;&amp;emsp;最近在刷《剑指offer》的题，其中有一道题目叫做删除链表中重复的节点，我想了半天没想到比较好的解决办法，于是看了看大佬的解析（菜哭了）。不看不知道，一看吓一跳，这尼玛写的也太妙了，忍不住写篇博客记录一下这个解题思路和代码。   题目描述&amp;emsp;&amp;emsp;在一个排好序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表">
+<meta name="keywords" content="数据结构与算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何去除链表中值重复的节点">
+<meta property="og:url" content="https://tewuyiang.github.io/如何去除链表中值重复的节点/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="前言&amp;emsp;&amp;emsp;最近在刷《剑指offer》的题，其中有一道题目叫做删除链表中重复的节点，我想了半天没想到比较好的解决办法，于是看了看大佬的解析（菜哭了）。不看不知道，一看吓一跳，这尼玛写的也太妙了，忍不住写篇博客记录一下这个解题思路和代码。   题目描述&amp;emsp;&amp;emsp;在一个排好序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-01-10T11:27:07.379Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何去除链表中值重复的节点">
+<meta name="twitter:description" content="前言&amp;emsp;&amp;emsp;最近在刷《剑指offer》的题，其中有一道题目叫做删除链表中重复的节点，我想了半天没想到比较好的解决办法，于是看了看大佬的解析（菜哭了）。不看不知道，一看吓一跳，这尼玛写的也太妙了，忍不住写篇博客记录一下这个解题思路和代码。   题目描述&amp;emsp;&amp;emsp;在一个排好序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">如何去除链表中值重复的节点</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">如何去除链表中值重复的节点</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-01-10T09:38:48.000Z" itemprop="datePublished" class="page-time">
+  2020-01-10
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/数据结构与算法/">数据结构与算法</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#题目描述"><span class="post-toc-number">2.</span> <span class="post-toc-text">题目描述</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#解题思路"><span class="post-toc-number">3.</span> <span class="post-toc-text">解题思路</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#代码实现"><span class="post-toc-number">4.</span> <span class="post-toc-text">代码实现</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-如何去除链表中值重复的节点"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">如何去除链表中值重复的节点</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-01-10 17:38:48" datetime="2020-01-10T09:38:48.000Z"  itemprop="datePublished">2020-01-10</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/数据结构与算法/">数据结构与算法</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>&emsp;&emsp;最近在刷<a href="https://www.nowcoder.com/ta/coding-interviews" target="_blank" rel="noopener">《剑指offer》</a>的题，其中有一道题目叫做<strong>删除链表中重复的节点</strong>，我想了半天没想到比较好的解决办法，于是看了看大佬的解析（菜哭了）。不看不知道，一看吓一跳，这尼玛写的也太妙了，忍不住写篇博客记录一下这个解题思路和代码。</p>
+<br>
+
+<h2 id="题目描述"><a href="#题目描述" class="headerlink" title="题目描述"></a>题目描述</h2><p>&emsp;&emsp;在一个<strong>排好序</strong>的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表<code>1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5</code> 处理后为 <code>1-&gt;2-&gt;5</code>。</p>
+<br>
+
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>&emsp;&emsp;这道题我们分两种情况来考虑：</p>
+<ol>
+<li>首先第一种情况：头节点的值存在重复；比如<code>1-&gt;1-&gt;1-&gt;2-&gt;3-&gt;3-&gt;4</code>，前面这个链表的头节点重复了<code>3次</code>，所以这时候，我们应该<strong>舍弃前3个重复的节点1</strong>，将<code>2</code>作为<strong>新的头节点</strong>，再继续向后判断；</li>
+<li>第二种情况就是头节点并不与它的下一个节点重复；比如上面的这个链表，我们去除了前面的<code>3个1</code>之后，剩下<code>2-&gt;3-&gt;3-&gt;4</code>，这时候，头节点不与后面的节点重复了，那我们保留头节点，并继续向后判断，发现后面后面的<code>两个3</code>发生了重复，于是，我们去除这个两个节点，并让原来头节点的<strong>next指向去除重复后的下一个位置</strong>，也就变成了<code>2-&gt;4</code>；若4后面还有其他重复，则我们去除重复后，让4指向剩下的部分；</li>
+</ol>
+<br>
+
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h2><p>&emsp;&emsp;其实上面的思路并不是很难想到，关键是代码如何实现呢？下面这个代码就是大佬对于上面这个思路的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ListNode <span class="title">deleteDuplication</span><span class="params">(ListNode pHead)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 若头节点为空，或者链表只有一个节点，则必没有重复，值将返回</span></span><br><span class="line">    <span class="keyword">if</span>(pHead == <span class="keyword">null</span> || pHead.next == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> pHead;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 保存头节点的下一个节点，上面已经判断了pHead.next不是空</span></span><br><span class="line">    ListNode next = pHead.next;</span><br><span class="line">    <span class="comment">// 若头节点的值与下一个节点的值相同</span></span><br><span class="line">    <span class="keyword">if</span>(pHead.val == next.val) &#123;</span><br><span class="line">        <span class="keyword">do</span>&#123;</span><br><span class="line">            <span class="comment">// 则继续向前找出与头节点重复的节点</span></span><br><span class="line">            <span class="comment">// 直到找到第一个与头节点不同的节点后，退出循环</span></span><br><span class="line">            next = next.next;</span><br><span class="line">        &#125;<span class="keyword">while</span>(next != <span class="keyword">null</span> &amp;&amp; next.val == pHead.val);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 舍弃前面的所有重复节点，将当前第一个与头节点不同的节点作为头节点，递归调用原方法，并直接返回</span></span><br><span class="line">        <span class="keyword">return</span> deleteDuplication(next);</span><br><span class="line">    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 若头节点与它的下一个节点值不同，则将头节点的下一个节点作为头节点，递归调用方法</span></span><br><span class="line">        <span class="comment">// 并将返回值赋给头节点的next属性</span></span><br><span class="line">        pHead.next = deleteDuplication(next);</span><br><span class="line">        <span class="keyword">return</span> pHead;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 以下是节点ListNode</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ListNode</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> val;</span><br><span class="line">	ListNode next = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">	ListNode(<span class="keyword">int</span> val) &#123;</span><br><span class="line">		<span class="keyword">this</span>.val = val;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面的代码我加了点注释，看得难受可以复制到编辑器中，删掉注释再看。</p>
+<p>&emsp;&emsp;上面这段代码，给我的感觉就是把递归用的出神入化（可能是我太菜了）。除去注释，短短几行代码，就将上面的思路完全实现，下面我来解读一下：</p>
+<p>&emsp;&emsp;上面的代码首先做了特判，若传入的头节点是空，或者没有后续节点，那就不用去重，直接返回。这之后，先将头节点的下一个节点保存。</p>
+<p>&emsp;&emsp;我们先判断当前是否满足前面说的第一种情况：<strong>头节点发生了重复</strong>，若发生了这种情况，就一直向后找，直到找到第一个不与头节点重复的节点，然后我们舍弃前面的节点，把这个节点当作头节点，递归调用方法，并直接将返回值返回，这相当于是把后面剩下的部分当作一条新的链表，而前面重复的就直接舍弃了；</p>
+<p>&emsp;&emsp;若当前链表是我们之前说的第二种情况：<strong>头节点不重复</strong>，则我们将头节点的下一个节点作为参数，递归调用原方法，将除去头节点后的子链表看作是一个新链表，而方法返回值就是这个子链表去重后的链表，我们将其与原来头节点关联，就完整地去重了。</p>
+<p>&emsp;&emsp;上面代码最精妙的地方就是<strong>递归</strong>，将原链表中除去头节点的剩余部分，当作一个新链表进行处理，短短几行代码，就实现了去重。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-01-10T11:27:07.379Z" itemprop="dateUpdated">2020-01-10 19:27:07</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/数据结构与算法/">数据结构与算法</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&title=《如何去除链表中值重复的节点》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&title=《如何去除链表中值重复的节点》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/如何去除链表中值重复的节点/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何去除链表中值重复的节点》 — 博客主页&url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/在Java中如何使用正则表达式/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">在Java中如何使用正则表达式</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&title=《如何去除链表中值重复的节点》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&title=《如何去除链表中值重复的节点》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/如何去除链表中值重复的节点/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何去除链表中值重复的节点》 — 博客主页&url=https://tewuyiang.github.io/如何去除链表中值重复的节点/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/如何去除链表中值重复的节点/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/如何去除链表中值重复的节点/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
