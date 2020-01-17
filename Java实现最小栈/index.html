@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近依旧在刷《剑指offer》的题目，然后今天写到了一道蛮有意思的题目，叫做包含min函数的栈，解题思路有点妙，写篇博客记录一下。   二、描述&amp;emsp;&amp;emsp;这道题目的描述是：定义栈的数据结构，请在该类型中实现一个能够得到栈中所含最小元素的min函数（时间复杂度应为O（1））。 &amp;emsp;&amp;emsp;然后这题给出的原始代码如下，具体方法代码需要自己补充：">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-01-17T17:07:18.712Z">
+<meta property="og:updated_time" content="2020-01-17T17:15:34.267Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java实现最小栈">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近依旧在刷《剑指offer》的题目，然后今天写到了一道蛮有意思的题目，叫做包含min函数的栈，解题思路有点妙，写篇博客记录一下。   二、描述&amp;emsp;&amp;emsp;这道题目的描述是：定义栈的数据结构，请在该类型中实现一个能够得到栈中所含最小元素的min函数（时间复杂度应为O（1））。 &amp;emsp;&amp;emsp;然后这题给出的原始代码如下，具体方法代码需要自己补充：">
@@ -131,7 +131,7 @@
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
                 <i class="icon icon-lg icon-chevron-left"></i>
             </a>
-            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
                 <i class="icon icon-lg icon-search"></i>
             </a>
@@ -220,7 +220,7 @@
 <li><strong>出栈的元素<em>大于</em>栈中最小值</strong>：此时<code>dataStack</code>的栈顶元素出栈，而<code>minStack</code>不变；</li>
 <li><strong>出栈的元素<em>等于</em>栈中最小值</strong>：此时<code>dataStack</code>的栈顶元素出栈，同时，<code>minStack</code>的栈顶元素也出栈；</li>
 </ul>
-<p>&emsp;&emsp;这样做有什么意义呢？很简单，这个<code>minStack</code>里面的元素是怎么来的？如果当前入栈的元素<strong>小于等于</strong>最小值（即<code>minStack</code>的栈顶元素），我们就把他加入到<code>minStack</code>中，这样，<code>minStack</code>中的元素就是单调递减的，而且栈顶元素一定是<code>dataStack</code>中的最小值，而栈顶的下一个元素，一定是所有元素中的<strong>第二小值</strong>，再往下就是<strong>第三小值，第四小值</strong>……依次类推（这里好好理解一下）。所以，如果我们现在出栈的值，和<code>minStack</code>的栈顶元素（即最小值）相等，那我们就让<code>minStack</code>的栈顶元素出栈，然后神奇的事情发生了：<strong>原来的第二小值现在变成了minStack的栈顶元素，而原来的最小值出栈后，第二小值就是新的最小值了</strong>；通过这种方式，我们就成功的解决了之前说过的，最小值出栈后，无法立即找到新最小值的问题；</p>
+<p>&emsp;&emsp;这样做有什么意义呢？很简单，这个<code>minStack</code>里面的元素是怎么来的？如果当前入栈的元素<strong>小于等于</strong>最小值（即<code>minStack</code>的栈顶元素），我们就把他加入到<code>minStack</code>中；这样一路下来，<code>minStack</code>中的元素一定是单调递减的，而且栈顶元素一定是<code>dataStack</code>中的最小值，而栈顶元素的下一个元素，一定是所有元素中的<strong>第二小值</strong>，再往下就是<strong>第三小值，第四小值</strong>……依次类推（这里好好理解一下）。所以，如果我们现在出栈的值，和<code>minStack</code>的栈顶元素（即最小值）相等，那我们就让<code>minStack</code>的栈顶元素出栈，然后神奇的事情发生了：<strong>原来的第二小值现在变成了minStack的栈顶元素，而原来的最小值出栈后，第二小值就是新的最小值了</strong>；通过这种方式，我们就成功的解决了之前说过的，最小值出栈后，无法立即找到新最小值的问题；</p>
 <br>
 
 <h4 id="栈中值重复引发的问题"><a href="#栈中值重复引发的问题" class="headerlink" title="栈中值重复引发的问题"></a>栈中值重复引发的问题</h4><p>&emsp;&emsp;这里还有一个问题，就是：为什么也在进行<code>push</code>时，<strong>小于等于</strong>最小值的元素需要放入<code>minStack</code>中，而不是<strong>小于</strong>？这是因为，栈中可能存在重复的值，而最小值也可能有重复。比如说，【1，2，3，1】依次入栈，而第一次入栈的1就是最小值，第四个数也同样为1，它处在栈顶。若此时，栈顶元素1出栈，我们检测到出栈的数和最小值1相等，于是我们就让<code>minStack</code>的栈顶元素出栈，然后<code>minStack</code>就为空了，而<code>dataStack</code>是【1，2，3】。可是实际上，最后一个1出栈，栈中的最小值依旧是1，因为1重复了。</p>
@@ -236,7 +236,7 @@
     <div class="content">
         
 <span class="post-time">
-    Last updated: <time datetime="2020-01-17T17:07:18.712Z" itemprop="dateUpdated">2020-01-18 01:07:18</time>
+    最終更新：<time datetime="2020-01-17T17:15:34.267Z" itemprop="dateUpdated">2020-01-18 01:15:34</time>
 </span><br>
 
 
@@ -370,7 +370,7 @@
 
         <p>
             
-            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
         </p>
     </div>
     <div class="bottom">
