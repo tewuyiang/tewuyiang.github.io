@@ -14,7 +14,7 @@
     
     
     
-    <title>Java实现最小栈 | 博客主页 | 世界是个球，前方总有路！</title>
+    <title>Java实现最小栈的两种方式 | 博客主页 | 世界是个球，前方总有路！</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     
     <meta name="theme-color" content="#3F51B5">
@@ -24,14 +24,14 @@
     <meta name="description" content="一、前言&amp;emsp;&amp;emsp;最近依旧在刷《剑指offer》的题目，然后今天写到了一道蛮有意思的题目，叫做包含min函数的栈，解题思路有点妙，写篇博客记录一下。   二、描述&amp;emsp;&amp;emsp;这道题目的描述是：定义栈的数据结构，请在该类型中实现一个能够得到栈中所含最小元素的min函数（时间复杂度应为O（1））。 &amp;emsp;&amp;emsp;然后这题给出的原始代码如下，具体方法代码需要自己补充：">
 <meta name="keywords" content="数据结构与算法">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Java实现最小栈">
+<meta property="og:title" content="Java实现最小栈的两种方式">
 <meta property="og:url" content="https://tewuyiang.github.io/Java实现最小栈/index.html">
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近依旧在刷《剑指offer》的题目，然后今天写到了一道蛮有意思的题目，叫做包含min函数的栈，解题思路有点妙，写篇博客记录一下。   二、描述&amp;emsp;&amp;emsp;这道题目的描述是：定义栈的数据结构，请在该类型中实现一个能够得到栈中所含最小元素的min函数（时间复杂度应为O（1））。 &amp;emsp;&amp;emsp;然后这题给出的原始代码如下，具体方法代码需要自己补充：">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-01-17T17:22:16.463Z">
+<meta property="og:updated_time" content="2020-01-18T17:11:05.571Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Java实现最小栈">
+<meta name="twitter:title" content="Java实现最小栈的两种方式">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近依旧在刷《剑指offer》的题目，然后今天写到了一道蛮有意思的题目，叫做包含min函数的栈，解题思路有点妙，写篇博客记录一下。   二、描述&amp;emsp;&amp;emsp;这道题目的描述是：定义栈的数据结构，请在该类型中实现一个能够得到栈中所含最小元素的min函数（时间复杂度应为O（1））。 &amp;emsp;&amp;emsp;然后这题给出的原始代码如下，具体方法代码需要自己补充：">
     
     <link rel="shortcut icon" href="/img/title.png">
@@ -125,7 +125,7 @@
         <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
           <i class="icon icon-lg icon-navicon"></i>
         </a>
-        <div class="flex-col header-title ellipsis">Java实现最小栈</div>
+        <div class="flex-col header-title ellipsis">Java实现最小栈的两种方式</div>
         
         <div class="search-wrap" id="search-wrap">
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
@@ -147,7 +147,7 @@
 <header class="content-header post-header">
 
     <div class="container fade-scale">
-        <h1 class="title">Java实现最小栈</h1>
+        <h1 class="title">Java实现最小栈的两种方式</h1>
         <h5 class="subtitle">
             
                 <time datetime="2020-01-17T15:49:15.000Z" itemprop="datePublished" class="page-time">
@@ -172,7 +172,7 @@
     <aside class="post-widget">
         <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
             <h4>TOC</h4>
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、描述"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、描述</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、思路"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、思路</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#栈中值重复引发的问题"><span class="post-toc-number">3.0.1.</span> <span class="post-toc-text">栈中值重复引发的问题</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、代码"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、代码</span></a></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、描述"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、描述</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、思路"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、思路</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#3-1-时间复杂度O-1-，空间复杂度O-n-的实现方式"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">3.1 时间复杂度O(1)，空间复杂度O(n)的实现方式</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#栈中值重复引发的问题"><span class="post-toc-number">3.1.1.</span> <span class="post-toc-text">栈中值重复引发的问题</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#3-2-时间复杂度O-1-，空间复杂度O-1-的实现方式"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">3.2 时间复杂度O(1)，空间复杂度O(1)的实现方式</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#emsp-数据溢出造成的问题"><span class="post-toc-number">3.2.1.</span> <span class="post-toc-text"> 数据溢出造成的问题</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、代码"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、代码</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#emsp-思路一实现"><span class="post-toc-number">4.0.1.</span> <span class="post-toc-text"> 思路一实现</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#emsp-思路二实现"><span class="post-toc-number">4.0.2.</span> <span class="post-toc-text"> 思路二实现</span></a></li></ol></li></ol></li></ol>
         </nav>
     </aside>
 
@@ -181,7 +181,7 @@
   class="post-article article-type-post fade" itemprop="blogPost">
 
     <div class="post-card">
-        <h1 class="post-card-title">Java实现最小栈</h1>
+        <h1 class="post-card-title">Java实现最小栈的两种方式</h1>
         <div class="post-meta">
             <time class="post-time" title="2020-01-17 23:49:15" datetime="2020-01-17T15:49:15.000Z"  itemprop="datePublished">2020-01-17</time>
 
@@ -208,7 +208,9 @@
 <br>
 
 <h2 id="三、思路"><a href="#三、思路" class="headerlink" title="三、思路"></a>三、思路</h2><p>&emsp;&emsp;看到这题，大多数人的第一反应应该就是：在类中声明一个变量<code>minVal</code>，记录当前栈中的最小值，然后在调用<code>min</code>方法时将这个最小值返回。但是仔细想一想，会发现这种办法是不可行的，因为如果执行了<code>pop</code>操作，将最小值出栈了，那我们怎么知道，剩下的元素中最小的是哪个，如何找到它从而去更新变量<code>minVal</code>呢？或许你认为可以在最小值出栈后，遍历剩下的元素，重新找出新的最小值。这样确实可以，相比于每次调用<code>min</code>都遍历一遍找最小值这种最笨的方法要好一些，但是别忘了，题目要求我们这个算法的时间复杂度是<code>O(1)</code>，而且在面试中，这种方法是拿不到分的。所以，我们需要找出更加高效的算法。</p>
-<p>&emsp;&emsp;提高时间效率的一个常用方法就是<strong>牺牲空间换取时间</strong>，这里也可以使用这种办法。我们可以定义一个辅助栈<code>minStack</code>，帮助我们记录最小值。在我们的类中，需要有两个栈，一个就是我们用来存值的栈<code>dataStack</code>，另外一个就是帮助我们维护最小值的栈<code>minStack</code>。</p>
+<br>
+
+<h3 id="3-1-时间复杂度O-1-，空间复杂度O-n-的实现方式"><a href="#3-1-时间复杂度O-1-，空间复杂度O-n-的实现方式" class="headerlink" title="3.1 时间复杂度O(1)，空间复杂度O(n)的实现方式"></a>3.1 时间复杂度O(1)，空间复杂度O(n)的实现方式</h3><p>&emsp;&emsp;提高时间效率的一个常用方法就是<strong>牺牲空间换取时间</strong>，这里也可以使用这种办法。我们可以定义一个辅助栈<code>minStack</code>，帮助我们记录最小值。在我们的类中，需要有两个栈，一个就是我们用来存值的栈<code>dataStack</code>，另外一个就是帮助我们维护最小值的栈<code>minStack</code>。</p>
 <p>&emsp;&emsp;<code>push</code>入栈操作有以下两种情况：</p>
 <ul>
 <li><strong>dataStack为空</strong>：此时，栈中没有元素，我们将push传入的参数直接放入到<code>dataStack</code>以及<code>minStack</code>中；</li>
@@ -227,8 +229,31 @@
 <p>&emsp;&emsp;所以，为了防止这种情况发生，我们在push操作时，检测到当前入栈的元素<strong>小于等于</strong>最小值时，就需要将它加入<code>minStack</code>中，这时我们再看上面的例子：当四个数都入栈后，<code>minStack</code>的情况是【1，1】，<code>dataStack</code>为【1，2，3，1】，而此时，<code>dataStack</code>的栈顶元素1出栈，<code>minStack</code>的栈顶也出栈，则<code>dataStack</code>变成【1，2，3】，而<code>minStack</code>变成【1】，<code>minStack</code>的栈顶依旧是<code>dataStack</code>中的最小元素1，巧妙避免了上面的问题。</p>
 <br>
 
+<h3 id="3-2-时间复杂度O-1-，空间复杂度O-1-的实现方式"><a href="#3-2-时间复杂度O-1-，空间复杂度O-1-的实现方式" class="headerlink" title="3.2 时间复杂度O(1)，空间复杂度O(1)的实现方式"></a>3.2 时间复杂度O(1)，空间复杂度O(1)的实现方式</h3><p>&emsp;&emsp;这道题，我在网上找别人的博客，发现基本上所有人都是上面这种实现方式，但是我还找到一篇博客，有另外一种实现方式，且时间复杂度和空间复杂度都为<code>O(1)</code>。可以说这种实现方式更加的妙，要让我来想，我估计一辈子也想不出这种方法。下面我就来简单介绍一下。</p>
+<p>&emsp;&emsp;这个新思路实际上就是我们刚开始看到这题时候所想的思路：设置一个变量<code>minValue</code>，记录当前栈中的最小值，然后在调用<code>min</code>方法的时候，直接返回就可以了。但是我们前面也说过，这种方法有一个问题，就是当最小值出栈后，我们如何能够知道剩下的数中，最小值是哪一个，也就是找到上一个最小值。而接下来要讲的思路非常巧妙的解决了这个问题。</p>
+<p>&emsp;&emsp;首先，在我们自定义的栈中，需要两个属性，一个就是和第一个思路一样的<code>dataStack</code>，而另一个就是<code>minValue</code>，用来存储栈中当前的最小值。可是，这里的<code>dataStack</code>存储的不是加入栈中的元素，我们在<code>dataStack</code>中放的，是<strong>当前入栈的元素与当前最小值的差值</strong>，即<code>diff = node - minValue</code>（<code>node</code>就是当前要入栈的元素，而<code>minValue</code>是当前栈中的最小值）。然后，这个差值<code>diff</code>我们分两种情况处理：</p>
+<ul>
+<li><strong>diff &lt; 0</strong>：差值<code>diff</code>小于0，根据计算公式可知，当前入栈的元素，<strong>小于栈中的最小值</strong>，于是我们将最小值<code>minValue</code>更新为当前入栈的元素，并将diff加入<code>dataStack</code>中；</li>
+<li><strong>diff &gt;= 0</strong>：差值<code>diff</code>大于等于0，表示当前入栈的元素，大于等于栈中的最小值，则最小值<code>minValue</code>不需要改变；</li>
+</ul>
+<p>&emsp;&emsp;以上即是入栈<code>push</code>时要进行的操作，而出栈<code>pop</code>时也需要分情况考虑：</p>
+<ul>
+<li><strong>栈顶元素 &lt; 0</strong>：若当前栈顶的元素小于0，表示什么？从上面的描述我们知道，这表示<strong>这个元素入栈时，小于当时的最小值</strong>，所以它就是<strong>当前的最小值</strong>，于是<code>minValue</code>记录的就是当前要出栈的元素；而<code>minValue</code>出栈后，我们如何找到剩下元素中的最小值呢？我们知道，当前栈顶的值是通过<code>diff = node - minValue</code>算出来的，而我们又知道当前的<code>minValue</code>就是这个公式中的<code>node</code>，于是我们就可以知道，<strong><code>minValue（之前） = node - diff = minValue（现在）- diff</code></strong>，通过这个公式，我们成功的获得了上一个最小值（太巧妙了）；</li>
+<li><strong>栈顶元素 &gt;= 0</strong>：此时说明当前要出栈的元素不是最小值，所以我们可以根据公式<code>diff = node - minValue</code>得出，这个元素的实际值<code>node = diff + minValue</code>；</li>
+</ul>
+<p>&emsp;&emsp;就这样，我们成功的解决了最开始说的，最小值出栈后，无法找到上一个最小值的问题。但是我们上网搜索发现，很少有博客分享这种思路，要说原因，可能是因为这种思路<strong>存在一个比较致命的bug</strong>。</p>
+<br>
+
+<h4 id="emsp-数据溢出造成的问题"><a href="#emsp-数据溢出造成的问题" class="headerlink" title="&emsp;数据溢出造成的问题"></a>&emsp;数据溢出造成的问题</h4><p>&emsp;&emsp;我们试想这样一种情况，假设我们需要在栈中依次放入两个数，【2147483647， -2147483648】，首先，我们在栈中放入<code>2147483647</code>，此时栈中只有一个数，所以最小值就是<code>2147483647</code>。然后我们再向栈中加入 <code>-2147483648</code>，此时，我们需要计算它与最小值的差值，也就是<code>diff = -2147483648 - 2147483647</code>；按我们之前所说，新入栈的值更小，此时应该得到一个负数，上面的公式计算出来也确实是个负数；但是不要忘记，<code>int</code>是有范围的，而<strong>上面的公式计算的结果超过了int所能存储的最小值，造成数据溢出</strong>，得到的结果是一个 <code>1</code>，是个正数，于是产生了错误的结果，这个思路自然gg。</p>
+<p>&emsp;&emsp;为了解决这个问题，我们可以用<code>long</code>代替<code>int</code>存储每一个元素，但是这样每个元素的存储空间就扩大了一倍。而这个思路相对于第一个思路的好处就是不需要开辟辅助栈，节省空间，如果改为了<code>long</code>，那这个思路的优势也将不复存在，并且如果我们想在栈中存<code>long</code>类型的值呢，难道要用<code>BigInteger</code>吗？所以华而不实可能就是这个思路没有传播开来的原因吧。当然，这个思路还是非常巧妙的，学习一下也挺好，如果面试中遇到这个题，说出这种思路，也是一个加分项嘛。</p>
+<br>
+
 <h2 id="四、代码"><a href="#四、代码" class="headerlink" title="四、代码"></a>四、代码</h2><p>&emsp;&emsp;下面就是上述思路的实现，偷懒了点懒，下面的代码我直接使用了Java自带的栈来实现，主要是关注最小栈的实现思路，push或者pop这些操作的具体代码我就不自己写了；</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Stack;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Stack&lt;Integer&gt; dataStack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> Stack&lt;Integer&gt; minStack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 入栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> node)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 判断是否需要更新minStack</span></span><br><span class="line">        <span class="keyword">if</span>(dataStack.isEmpty() || minStack.peek() &gt;= node) &#123;</span><br><span class="line">            minStack.push(node);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 将元素放入dataStack</span></span><br><span class="line">        dataStack.push(node);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 出栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 若栈不为空才执行出栈</span></span><br><span class="line">        <span class="keyword">if</span>(!dataStack.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">// 若当前出栈的元素，等于栈中的最小值（即minStack的栈顶）</span></span><br><span class="line">            <span class="comment">// 则minStack的栈顶出栈</span></span><br><span class="line">            <span class="keyword">if</span>(dataStack.pop() == minStack.peek()) &#123;</span><br><span class="line">                minStack.pop();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 查看栈顶元素</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">top</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataStack.peek();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 返回栈中最小值</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">min</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 返回最小值，即minStack的栈顶元素</span></span><br><span class="line">        <span class="keyword">return</span> minStack.peek();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="emsp-思路一实现"><a href="#emsp-思路一实现" class="headerlink" title="&emsp;思路一实现"></a>&emsp;思路一实现</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Stack;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Stack&lt;Integer&gt; dataStack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> Stack&lt;Integer&gt; minStack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 入栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> node)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 判断是否需要更新minStack</span></span><br><span class="line">        <span class="keyword">if</span>(dataStack.isEmpty() || minStack.peek() &gt;= node) &#123;</span><br><span class="line">            minStack.push(node);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 将元素放入dataStack</span></span><br><span class="line">        dataStack.push(node);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 出栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 若栈不为空才执行出栈</span></span><br><span class="line">        <span class="keyword">if</span>(!dataStack.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">// 若当前出栈的元素，等于栈中的最小值（即minStack的栈顶）</span></span><br><span class="line">            <span class="comment">// 则minStack的栈顶出栈</span></span><br><span class="line">            <span class="keyword">if</span>(dataStack.pop() == minStack.peek()) &#123;</span><br><span class="line">                minStack.pop();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 查看栈顶元素</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">top</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> dataStack.peek();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 返回栈中最小值</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">min</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 返回最小值，即minStack的栈顶元素</span></span><br><span class="line">        <span class="keyword">return</span> minStack.peek();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h4 id="emsp-思路二实现"><a href="#emsp-思路二实现" class="headerlink" title="&emsp;思路二实现"></a>&emsp;思路二实现</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Stack;</span><br><span class="line"><span class="keyword">import</span> java.util.EmptyStackException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 存储diff</span></span><br><span class="line">    <span class="keyword">private</span> Stack&lt;Integer&gt; dataStack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    <span class="comment">// 存储当前栈中的最小值</span></span><br><span class="line">    <span class="keyword">private</span> Integer minValue;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 入栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> node)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 栈为空</span></span><br><span class="line">        <span class="keyword">if</span> (dataStack.isEmpty()) &#123;</span><br><span class="line">            minValue = node;	<span class="comment">// 最小值就是第一个入栈的值</span></span><br><span class="line">            dataStack.push(<span class="number">0</span>);	<span class="comment">// 而它与当前最小值的差值为0</span></span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            Integer diff = node - minValue;	<span class="comment">// 计算差值</span></span><br><span class="line">            dataStack.push(diff);</span><br><span class="line">            <span class="comment">// 若新入栈的值小于最小值，则更新最小值</span></span><br><span class="line">            <span class="keyword">if</span>(diff &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                minValue = node;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 出栈操作</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(dataStack.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EmptyStackException();</span><br><span class="line">        &#125;</span><br><span class="line">        Integer val = dataStack.pop();</span><br><span class="line">        <span class="comment">// 若当前出栈的值是最小值，则计算出上一个最小值并更新</span></span><br><span class="line">        <span class="keyword">if</span>(val &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            minValue = minValue - val;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 查看栈顶元素</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">top</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(dataStack.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EmptyStackException();</span><br><span class="line">        &#125;</span><br><span class="line">        Integer val = dataStack.peek();</span><br><span class="line">        <span class="comment">// 若栈顶元素不是最小值，则计算元素的实际值</span></span><br><span class="line">        <span class="keyword">return</span>  val &lt; <span class="number">0</span> ? minValue :  minValue + val;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 返回栈中最小值</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">min</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(dataStack.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EmptyStackException();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> minValue;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
         </div>
 
         <blockquote class="post-copyright">
@@ -236,7 +261,7 @@
     <div class="content">
         
 <span class="post-time">
-    Last updated: <time datetime="2020-01-17T17:22:16.463Z" itemprop="dateUpdated">2020-01-18 01:22:16</time>
+    Last updated: <time datetime="2020-01-18T17:11:05.571Z" itemprop="dateUpdated">2020-01-19 01:11:05</time>
 </span><br>
 
 
@@ -268,7 +293,7 @@
 <div class="page-share" id="pageShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈的两种方式》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -278,7 +303,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈的两种方式》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
@@ -288,7 +313,7 @@
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java实现最小栈》 — 博客主页&url=https://tewuyiang.github.io/Java实现最小栈/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java实现最小栈的两种方式》 — 博客主页&url=https://tewuyiang.github.io/Java实现最小栈/&via=https://tewuyiang.github.io" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
@@ -392,7 +417,7 @@
 <div class="global-share" id="globalShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈的两种方式》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -402,7 +427,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Java实现最小栈/&title=《Java实现最小栈的两种方式》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
@@ -412,7 +437,7 @@
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java实现最小栈》 — 博客主页&url=https://tewuyiang.github.io/Java实现最小栈/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java实现最小栈的两种方式》 — 博客主页&url=https://tewuyiang.github.io/Java实现最小栈/&via=https://tewuyiang.github.io" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
