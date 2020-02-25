@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>HashMap源码解读——深入理解HashMap高效的原因 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java容器">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+<meta name="keywords" content="Java容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap源码解读——深入理解HashMap高效的原因">
+<meta property="og:url" content="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png">
+<meta property="og:updated_time" content="2020-02-25T10:04:36.598Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HashMap源码解读——深入理解HashMap高效的原因">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+<meta name="twitter:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">HashMap源码解读——深入理解HashMap高效的原因</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">HashMap源码解读——深入理解HashMap高效的原因</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-02-24T14:28:36.000Z" itemprop="datePublished" class="page-time">
+  2020-02-24
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、解析"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、解析</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是Hash"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是Hash</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-HashMap的底层结构"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 HashMap的底层结构</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-HashMap的容量机制——高效秘诀"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 HashMap的容量机制——高效秘诀</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-解析hash方法"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 解析hash方法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-JDK1-8对HashMap结构的优化——红黑树"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 JDK1.8对HashMap结构的优化——红黑树</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-HashMap源码解读——深入理解HashMap高效的原因"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">HashMap源码解读——深入理解HashMap高效的原因</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-02-24 22:28:36" datetime="2020-02-24T14:28:36.000Z"  itemprop="datePublished">2020-02-24</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;<code>Java</code>的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下<code>HashMap</code>的源码，颇有心得，所以写篇博客分享一下<code>HashMap</code>的实现原理。内容主要包括<code>HashMap</code>的底层结构，<code>hash</code>函数的原理，以及<code>HashMap</code>的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清楚的理解<code>HashMap</code>高效的秘诀。</p>
+<br>
+
+<h2 id="二、解析"><a href="#二、解析" class="headerlink" title="二、解析"></a>二、解析</h2><h3 id="emsp-2-1-什么是Hash"><a href="#emsp-2-1-什么是Hash" class="headerlink" title="&emsp;2.1 什么是Hash"></a>&emsp;2.1 什么是Hash</h3><p><strong>&emsp;&emsp;Hash，一般翻译做“散列”，也有直接音译为“哈希”的，就是把任意长度的输入，通过散列算法，变换成固定长度的输出，该输出就是散列值。</strong>这种转换是一种压缩映射，也就是，散列值的空间通常远小于输入的空间，不同的输入可能会散列成相同的输出，所以不可能从散列值来唯一的确定输入值。简单的说就是一种将任意长度的消息压缩到某一固定长度的消息摘要的函数（此处引用其他博客）。简单来说，就是<strong>将一个任意类型的数据，根据一定的算法，计算出一个标识它的<code>int</code>类型的整数，也就是<code>hash</code>值</strong>。</p>
+<p>&emsp;&emsp;注意：根据同一散列函数计算出的散列值如果不同，那么输入值肯定也不同；但是，根据同一散列函数计算出的散列值如果相同，输入值不一定相同。两个不同的输入值，根据同一散列函数计算出的散列值相同的现象叫做<strong>hash碰撞</strong>。</p>
+<br>
+
+<h3 id="emsp-2-2-HashMap的底层结构"><a href="#emsp-2-2-HashMap的底层结构" class="headerlink" title="&emsp;2.2 HashMap的底层结构"></a>&emsp;2.2 HashMap的底层结构</h3><p>&emsp;&emsp;我们首先来谈一谈<code>HashMap</code>的底层结构，即<code>HashMap</code>是如何保存数据的，若连这个都不清楚，那其余的也无从谈起。<code>HashMap</code>的结构概括说来就是：<strong>数组 + 链表</strong>。</p>
+<p>&emsp;&emsp;我们知道，<code>HashMap</code>中的元素都是<code>Key - Value</code>类型的，我们姑且将每一个元素称为一个<strong>节点Node</strong>。在<code>HashMap</code>中，所有的<code>Node</code>都是存在一个数组中，而这个数组的声明如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The table, initialized on first use, and resized as</span></span><br><span class="line"><span class="comment"> * necessary. When allocated, length is always a power of two.</span></span><br><span class="line"><span class="comment"> * (We also tolerate length zero in some operations to allow</span></span><br><span class="line"><span class="comment"> * bootstrapping mechanics that are currently not needed.)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">transient</span> Node&lt;K,V&gt;[] table;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，这个数组<code>table</code>的类型是<code>Node</code>类型，其实就是我们说的<code>Key - Value</code>。那当我们进行<code>put</code>操作时，元素将如何存入这个数组中呢？这时候就要用到我们前面提到的<code>Hash</code>了。<strong>当我们往<code>HashMap</code>中存入一个元素时，<code>HaspMap</code>底层会调用<code>hash</code>函数，计算出元素<code>key</code>的<code>hash</code>值，然后再用这个<code>hash</code>值与<code>HashMap</code>的总容量进行求余，得到的余数就是这个元素在数组中存放的下标。</strong></p>
+<p>&emsp;&emsp;既然如此，那就可能会出现<code>hash碰撞</code>的情况——即两个不同的元素，根据以上方法求出的下标值却相等。这要如何解决呢？<code>HashMap</code>的做法就是采用 <strong>数组+链表</strong> 的方式解决：<strong>在存储元素的数组中，每个位置并不是存储一个单独的<code>Node</code>，而是存储一个链表，而这个<code>Node</code>就是链表中的一个节点，当一个元素要放入数组的某个位置时，若这个位置已经有元素了，那就将这个元素接在最后一个元素的后面</strong>。如下图所示，数组下标为1的位置有三个元素，它们共同形成一个链表。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;我们来看看<code>HashMap</code>中<code>Node</code>的代码，帮助我们理解<strong>数组+链表</strong>的结构。通过下面的代码可以看到，<code>Node</code>是<code>HashMap</code>的一个内部类，他有四个成员变量：</p>
+<ul>
+<li><strong>hash</strong>：记录节点的<code>hash</code>值；</li>
+<li><strong>key</strong>：记录节点的<code>key</code>值；</li>
+<li><strong>value</strong>：记录节点的<code>value</code>值；</li>
+<li><strong>next</strong>：记录当前节点的下一个节点；</li>
+</ul>
+<p>&emsp;&emsp;而链表的结构，就是通过<code>next</code>成员变量来实现的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Node</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; <span class="keyword">implements</span> <span class="title">Map</span>.<span class="title">Entry</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> hash;</span><br><span class="line">    <span class="keyword">final</span> K key;</span><br><span class="line">    V value;</span><br><span class="line">    Node&lt;K,V&gt; next;</span><br><span class="line"></span><br><span class="line">    Node(<span class="keyword">int</span> hash, K key, V value, Node&lt;K,V&gt; next) &#123;</span><br><span class="line">        <span class="keyword">this</span>.hash = hash;</span><br><span class="line">        <span class="keyword">this</span>.key = key;</span><br><span class="line">        <span class="keyword">this</span>.value = value;</span><br><span class="line">        <span class="keyword">this</span>.next = next;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//其余方法......</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h3 id="emsp-2-3-HashMap的容量机制——高效秘诀"><a href="#emsp-2-3-HashMap的容量机制——高效秘诀" class="headerlink" title="&emsp;2.3 HashMap的容量机制——高效秘诀"></a>&emsp;2.3 HashMap的容量机制——高效秘诀</h3><p>&emsp;&emsp;理解了<code>HashMap</code>的底层结构之后，我们再来探索它高效的秘诀。我们知道，<code>HashMap</code>是优化了查找速度的一种集合，查询效率极高。而在<code>HashMap</code>中，查询一个元素的步骤如下：</p>
+<ol>
+<li>首先通过向<code>hash</code>函数传入需要查找的元素的key值，hash函数计算出key的hash值；</li>
+<li>将<code>hash</code>值与总容量进行取模运算，计算出数组元素在数组中的下标；</li>
+<li>根据数组下标获得元素所在的链表；</li>
+<li>从链表的第一个节往后依次比较<code>key</code>值；</li>
+<li>找到<code>key</code>值相等的节点返回；</li>
+</ol>
+<p>&emsp;&emsp;以上步骤可以归结为以下代码（注意：以下代码是我从源码中抽取出来组合在一起的，实际上它们并不在一个方法中）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Object <span class="title">get</span><span class="params">(Object key)</span></span>&#123;</span><br><span class="line">    <span class="comment">// 1：获取key的hash值</span></span><br><span class="line">    <span class="keyword">int</span> h = hash(key);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 2-3：从数组中获取元素所在的链表</span></span><br><span class="line">    <span class="keyword">int</span> len = table.length;</span><br><span class="line">    Node n = table[ h &amp; (len - <span class="number">1</span>) ]; <span class="comment">// 重点：这里使用 h&amp;(len-1) 取代了 h%len</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 4-5：遍历链表n，并返回查找结果（代码省略）</span></span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面的代码只有一个地方可能让人疑惑，那就是取模操作%被按位与运算&amp;所取代。上面的代码中，数组的中括号中本应该是<code>h%len</code>，但是大家去查阅源码，会发现实际写的是<code>h &amp; (len-1)</code>。这是什么意思呢，其实在特殊情况下，这就是取模运算。下面我们就来讲解一下满足 <code>h &amp; (len-1) == h % len</code>的特殊情况。</p>
+<p>&emsp;&emsp;这种特殊情况就是：<strong>一个数对<code>2^n</code>取模，等价于这个数对<code>2^n - 1</code>做与运算，即<code>num % 2^n == num &amp; (2^n -1)</code></strong>。我们举个例子来说明这个公式的原理：假设上面的公式中，<code>n==3</code>，即我们要对<code>2^3</code>，也就是8取模，8转换成二进制是<code>1000</code>，而<code>2^3-1 == 7</code>，转换成二进制就是<code>0111</code>，然后与一个数做与运算，即<code>num &amp; (2^3 -1)</code>，结果将得到<code>num</code>转换成二进制后的末尾三位。而我们看<code>num / 8</code>，实际上就是二进制的<code>num</code>向右移动三位，移掉掉的那三位就是<code>num / 8</code>的余数，即<code>num % 8</code>。而移掉的三位数，不正是我们通过<code>num &amp; (2^3 -1)</code>获得的吗。比方说<code>10 % 8 == 2</code>，而<code>10 &amp; (7) = 1010 &amp; 0111 == 0010 == 2</code>。这个地方需要好好理解一下，如果实在不理解，那就记住这个结论。</p>
+<p> &emsp;&emsp;在<code>HashMap</code>中，<strong>保证了存储元素的数组的大小一定是<code>2^n</code></strong>，所以在内部，通过hash值与数组容量取余的操作，都用上面说的与运算取代了。这样做的好处是，与运算直接操作内存，效率极高，而在<code>HashMap</code>中，获取数组下标是一个非常频繁的操作，无论是<code>get</code>还是<code>put</code>都要用上，所以这种优化对<code>HashMap</code>的查询效率有很多的提升。在<code>HashMap</code>中，有两个静态变量，分别是<strong>默认初始容量</strong>和<strong>最大容量</strong>，可以看到，它们都是都是2的n次方，而且没有直接写成数字，而是一个移位公式，如 <code>1 &lt;&lt; 4</code>，就是为了提醒大家<code>HashMap</code>的容量机制。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The default initial capacity - MUST be a power of two.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">4</span>; <span class="comment">// aka 16</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The maximum capacity, used if a higher value is implicitly specified</span></span><br><span class="line"><span class="comment"> * by either of the constructors with arguments.</span></span><br><span class="line"><span class="comment"> * MUST be a power of two &lt;= 1&lt;&lt;30.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAXIMUM_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">30</span>;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;说到这里，可能有人会有疑问了：<strong><code>HashMap</code>不是有构造器，可以指定初始容量吗，如果我们指定一个不是<code>2^n</code>的容量，不就破坏了这种机制吗？</strong>答案当然是<strong>不会</strong>的，我们虽然可以指定HashMap的初始容量，但是不代表它会直接使用我们指定的容量。<strong>当我们为<code>HashMap</code>指定一个初始容量时，它不会直接使用这个容量，而是计算出第一个大于等于这个容量的且满足<code>2^n</code>的数，若这个数大于<code>HashMap</code>运行的最大值，则直接使用最大值</strong>。而且我们知道，Java中的大多数容器都有自动扩容机制，包括<code>HashMap</code>，而<code>HashMap</code>为了满足容量一定是<code>2^n</code>，扩容时是在原来的基础上<strong>乘2</strong>，因为<code>2^n</code>乘以2还是满足<code>2^n</code>。</p>
+<p>&emsp;&emsp;<font style="color:gray">其实，使用位运算代替取模运算，除了性能之外，还有一个好处就是可以很好的解决负数的问题。因为我们知道，hashcode的结果是int类型，而int的取值范围是-2^31 ~ 2^31 - 1，即[ -2147483648,  2147483647]；这里面是包含负数的，我们知道，对于一个负数取模还是有些麻烦的。如果使用二进制的位运算的话就可以很好的避免这个问题。首先，不管hashcode的值是正数还是负数。length-1这个值一定是个正数。那么，他的二进制的第一位一定是0（有符号数用最高位作为符号位，“0”代表“+”，“1”代表“-”），这样里两个数做按位与运算之后，第一位一定是个0，也就是，得到的结果一定是个正数。（此段引用参考博客）</font></p>
+<br>
+
+<h3 id="emsp-2-4-解析hash方法"><a href="#emsp-2-4-解析hash方法" class="headerlink" title="&emsp;2.4 解析hash方法"></a>&emsp;2.4 解析hash方法</h3><p>&emsp;&emsp;接下来，我们再来看看<code>HashMap</code>源码中的计算哈希值的hash函数是如何实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">hash</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> h;</span><br><span class="line">    <span class="keyword">return</span> (key == <span class="keyword">null</span>) ? <span class="number">0</span> : (h = key.hashCode()) ^ (h &gt;&gt;&gt; <span class="number">16</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;以上是<code>JDK1.8</code>中<code>hash</code>函数的实现（其他版本的hash方法有所差异，但是原理是一样的），简介明了：<strong>方法接收一个参数，也就是<code>Node</code>的<code>key</code>值，然后判断<code>key</code>值是否为<code>null</code>，若为<code>null</code>，则<code>hash</code>值为0；否则调用<code>key</code>的<code>hashCode</code>方法获取<code>hash</code>值，并将<code>hash</code>值右移16位后与原<code>hash</code>值做按位与运算</strong>。这个方法还是很好理解的，除了一个地方，就是为什么要将<code>hash</code>值右移16位后做与运算呢，调用<code>hashCode</code>方法获取的<code>hash</code>值不能直接用吗？这么做的原因还是为了优化。</p>
+<p>&emsp;&emsp;我们如何定义一个<code>hash</code>算法的优劣？其中的一个重要因素就是尽量少发生<code>hash碰撞</code>。大家可以试想一下，<code>HashMap</code>最坏的情况是什么样子：所有存入其中的元素，通过<code>hash</code>值计算出来的下标都是一样的，都放在数组的同一个位置，组成一个链表。这样的情况下，<code>HashMap</code>便完全失去了意义，和一个普通的链表又有什么区别。而好的<code>hash</code>函数，可以使碰撞发生的概率大大减少，让元素在数组中分别均匀，从而提高查找效率。</p>
+<p>&emsp;&emsp;而源码中的按位与运算，实际上就是为了降低<code>hash</code>碰撞进行的<strong>扰动计算</strong>。为什么这么说呢，举个简单的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">HashMap的容量：<span class="number">8</span>  -&gt;  转换成二进制：<span class="number">1000</span></span><br><span class="line"></span><br><span class="line">两个要存如HashMap中的元素的hash值如下（下面两个hash值只有最后<span class="number">4</span>位完全匹配）：</span><br><span class="line">    <span class="number">1</span>、 <span class="number">0010</span> <span class="number">1010</span> <span class="number">0111</span> <span class="number">1001</span> <span class="number">0010</span> <span class="number">0101</span></span><br><span class="line">    <span class="number">2</span>、 <span class="number">0101</span> <span class="number">1101</span> <span class="number">1111</span> <span class="number">0100</span> <span class="number">0111</span> <span class="number">0101</span></span><br><span class="line"></span><br><span class="line">这两个hash值与容量<span class="number">8</span>取模后得到：</span><br><span class="line">    <span class="number">1</span>、<span class="number">0101</span></span><br><span class="line">    <span class="number">2</span>、<span class="number">0101</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，上面例子中的两个<code>hash</code>值差别巨大，但是它们和容量8进行取模后的结果却是一样的，结果发生了<code>hash</code>碰撞。因为容量对于容量<code>8</code>来说，取模的做法是与<code>8-1</code>也就是7做按位与运算，而7转换成二进制的结果是<code>0111</code>，也就是说，取模的结果实际上就是取<code>hash</code>值的后3位，而<code>hash</code>值的前29位无论怎样，都不会影响结果。所以就是上面两个<code>hash</code>值差异巨大，但是后三位相同，导致它们求出的下标是相同的。这种情况下，发生<code>hash</code>碰撞的几率将会大大增加。所以，为了充分利用计算出的<code>hash</code>值的每一位，<code>HashMap</code>的源码做出了一个优化，将计算出的<code>hash</code>值向右移动<code>16</code>位，让后让移动后的值与原<code>hash</code>值做与运算，计算出新的值。为什么是<code>16</code>位呢，因为<code>int</code>是<code>32位</code>的，<code>16位</code>正好是<code>32</code>的一半。这样，就充分利用了<code>hash</code>值的每一位，减少了<code>hash</code>碰撞的发生。</p>
+<br>
+
+<h3 id="emsp-2-5-JDK1-8对HashMap结构的优化——红黑树"><a href="#emsp-2-5-JDK1-8对HashMap结构的优化——红黑树" class="headerlink" title="&emsp;2.5 JDK1.8对HashMap结构的优化——红黑树"></a>&emsp;2.5 JDK1.8对HashMap结构的优化——红黑树</h3><p>&emsp;&emsp;其实从<code>JDK1.8</code>开始，<code>HashMap</code>已经不再是简单的<strong>数组+链表</strong>的存储结构，而是做出了一个巨大的变动，在<code>HashMap</code>的数据存储中引入了<strong>红黑树</strong>，变成了<strong>数组+链表+树</strong>的结构。下面我们来简单的谈一谈这种结构。</p>
+<p>&emsp;&emsp;首先我们还是要回归之前谈过的<code>HashMap</code>最坏情况的问题：<code>HashMap</code>中，所有的元素都在数组的同一个位置，在一条链表上。这时候，<code>HashMap</code>和一个链表基本上没什么区别，之前的那些查询优化也就没效果了。这时候查询一个元素的时间复杂度是多少？当然是和遍历链表一样——<code>O（n）</code>。当然，这只是极端的情况，正常情况下不会出现，但是大部分元素集中在少数几条链表上这种情况还是很常见的，比如key是自定义类型，而程序员提供了不好的<code>hashCode</code>方法，得到的<code>hash</code>值经常发生碰撞。</p>
+<p>&emsp;&emsp;为了当发生以上情况时效率不至于太慢，<code>JDK1.8</code>改变了<code>HashMap</code>的存储结构——<strong>当<code>HashMap</code>中的某一条链表元素过多时，底层就会将其转换为一棵红黑树</strong>。而红黑树的查询时间复杂度为<code>O(log n)</code>，相比于链表的<code>O（n）</code>来说要快上不少。在<code>HashMap</code>中有下面三个带有默认值的静态变量，用来控制树化过程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 桶的树化阈值：</span></span><br><span class="line"><span class="comment"> *     即 链表转成红黑树的阈值，在存储数据时，</span></span><br><span class="line"><span class="comment"> *     当链表长度 &gt; 该值时，则将链表转换成红黑树</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TREEIFY_THRESHOLD = <span class="number">8</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 桶的链表还原阈值：</span></span><br><span class="line"><span class="comment"> *     即 红黑树转为链表的阈值，当在扩容（resize（））时</span></span><br><span class="line"><span class="comment"> *     （此时HashMap的数据存储位置会重新计算），在重新计算存储位置后，</span></span><br><span class="line"><span class="comment"> *     当原有的红黑树内数量 &lt; 6时，则将 红黑树转换成链表</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> UNTREEIFY_THRESHOLD = <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 最小树形化容量阈值：</span></span><br><span class="line"><span class="comment"> *     即 当哈希表中的总容量 &gt; 该值时，才允许将链表转换成红黑树,</span></span><br><span class="line"><span class="comment"> *     否则，当元素太多时，则直接扩容，而不是树形化</span></span><br><span class="line"><span class="comment"> *     为了避免进行扩容、树形化选择的冲突，这个值不能小于 4 * TREEIFY_THRESHOLD</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MIN_TREEIFY_CAPACITY = <span class="number">64</span>;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;上面的内容对HashMap的底层存储，效率优化机制做了一个较为详细的介绍，相信看完之后会对HashMap有一个较为深入的理解。但是，这些只是HashMap的一部分，想要真正了解HashMap，还是要自己结合源码，仔细的阅读。希望我写的这篇博客能够对一些人有所帮助。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p>&emsp;&emsp;以上大部分内容参看下面两篇博客后，根据自己的理解编写：</p>
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/qCHkzs4JPOipB-ZzqrfbeQ" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/qCHkzs4JPOipB-ZzqrfbeQ</a> —— 此篇分析hash函数</li>
+<li><a href="https://mp.weixin.qq.com/s/8a5BTWomhe3R-jqT1ffwYw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/8a5BTWomhe3R-jqT1ffwYw</a> —— 此篇分析HashMap容量</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最終更新：<time datetime="2020-02-25T10:04:36.598Z" itemprop="dateUpdated">2020-02-25 18:04:36</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java容器/">Java容器</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&title=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&title=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/Java实现最小栈/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Java实现最小栈的两种方式</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&title=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&title=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——深入理解HashMap高效的原因》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
