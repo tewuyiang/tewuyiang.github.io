@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>HashMap源码解读——逐句分析get和put方法的实现 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java容器">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
+<meta name="keywords" content="Java容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap源码解读——逐句分析get和put方法的实现">
+<meta property="og:url" content="https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T16:59:01.450Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HashMap源码解读——逐句分析get和put方法的实现">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">HashMap源码解读——逐句分析get和put方法的实现</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">HashMap源码解读——逐句分析get和put方法的实现</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-02-25T15:32:31.000Z" itemprop="datePublished" class="page-time">
+  2020-02-25
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、解析"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、解析</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-get方法源码解读"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 get方法源码解读</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-put方法源码解读"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 put方法源码解读</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-HashMap源码解读——分析get和put方法的实现"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">HashMap源码解读——逐句分析get和put方法的实现</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-02-25 23:32:31" datetime="2020-02-25T15:32:31.000Z"  itemprop="datePublished">2020-02-25</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;最近在研究<code>HashMap</code>的源码，经过这几天的研究，我对<code>HashMap</code>的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下<code>HashMap</code>中，最最重要的两个方法——<code>get</code>和<code>put</code>的代码实现。（注：以下代码基于<code>JDK1.8</code>）</p>
+<p>&emsp;&emsp;若想要看懂这两个方法的源代码，首先得对<code>HashMap</code>的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博客对<code>HashMap</code>的底层结构和实现进行了一个比较清晰和全面的讲解，同时博客的最底下附上了两篇阿里架构师对<code>HashMap</code>的分析，写的非常好，很有参考价值：</p>
+<ul>
+<li><p>Hexo链接 —— <a href="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/">HashMap源码解读——深入理解HashMap高效的原因</a></p>
+</li>
+<li><p>博客园链接 —— <a href="https://www.cnblogs.com/tuyang1129/p/12362959.html" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12362959.html</a></p>
+</li>
+</ul>
+<br>
+
+<h2 id="二、解析"><a href="#二、解析" class="headerlink" title="二、解析"></a>二、解析</h2><h3 id="emsp-2-1-get方法源码解读"><a href="#emsp-2-1-get方法源码解读" class="headerlink" title="&emsp;2.1 get方法源码解读"></a>&emsp;2.1 get方法源码解读</h3><p>&emsp;&emsp;<code>get</code>方法的作用是传入我们需要获取的节点的<code>key</code>，然后将这个节点的<code>value</code>返回。首先先贴上<code>get</code>方法的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    Node&lt;K,V&gt; e;</span><br><span class="line">    <span class="keyword">return</span> (e = getNode(hash(key), key)) == <span class="keyword">null</span> ? <span class="keyword">null</span> : e.value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，<code>get</code>方法的代码非常的简洁，因为具体的代码都封装在了<code>getNode</code>这个方法里面，<code>get</code>方法只是对它进行了调用。<code>getNode</code>方法接收两个参数，第一个参数是<code>key</code>的<code>hash</code>值，第二个参数就是<code>key</code>本身。下面我们就来看看<code>getNode</code>方法的源代码（通过注释，对源码进行了逐句解读）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Implements Map.get and related methods</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> hash key到hash值</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key key值</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the node, or null if none</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">final</span> HashMap.<span class="function">Node&lt;K,V&gt; <span class="title">getNode</span><span class="params">(<span class="keyword">int</span> hash, Object key)</span> </span>&#123;</span><br><span class="line">    HashMap.Node&lt;K,V&gt;[] tab; HashMap.Node&lt;K,V&gt; first, e; <span class="keyword">int</span> n; K k;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 以下if语句中判断三个条件：</span></span><br><span class="line">    <span class="comment">//   1、HashMap中存储数据的数组table不为null；</span></span><br><span class="line">    <span class="comment">//   2、数组table不为null，且长度大于0；</span></span><br><span class="line">    <span class="comment">//   3、table已经创建，且通过hash值计算出的节点存放位置有节点存在；</span></span><br><span class="line">    <span class="comment">// 若上面三个条件都满足，才表示HashMap中可能有我们需要获取的元素</span></span><br><span class="line">    <span class="keyword">if</span> ((tab = table) != <span class="keyword">null</span> &amp;&amp; (n = tab.length) &gt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">        (first = tab[(n - <span class="number">1</span>) &amp; hash]) != <span class="keyword">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 定位到元素在数组中的位置后，我们开始沿着这个位置的链表或者树开始遍历寻找</span></span><br><span class="line">        <span class="comment">// 注：JDK1.8之前，HashMap的实现是数组+链表，到1.8开始变成数组+链表+红黑树</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 首先判断这个位置的第一个节点的key值是否与参数的key值相等，</span></span><br><span class="line">        <span class="comment">// 若相等，则这个节点就是我们要找的节点，将其返回</span></span><br><span class="line">        <span class="keyword">if</span> (first.hash == hash &amp;&amp; <span class="comment">// always check first node</span></span><br><span class="line">            ((k = first.key) == key || (key != <span class="keyword">null</span> &amp;&amp; key.equals(k))))</span><br><span class="line">            <span class="keyword">return</span> first;</span><br><span class="line">        <span class="comment">// 若上面的不满足，则判断第一个节点是否有下一个节点</span></span><br><span class="line">        <span class="comment">// 若有，继续判断；若没有，那表示我们要找的节点不存在</span></span><br><span class="line">        <span class="keyword">if</span> ((e = first.next) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 若第一个节点是应该树节点，则通过红黑树的查找算法进行查找</span></span><br><span class="line">            <span class="keyword">if</span> (first <span class="keyword">instanceof</span> HashMap.TreeNode)</span><br><span class="line">                <span class="keyword">return</span> ((HashMap.TreeNode&lt;K,V&gt;)first).getTreeNode(hash, key);</span><br><span class="line">            <span class="comment">// 若不是一个树节点，表示当前位置是一个链表，则使用do...while循环遍历查找</span></span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="comment">// 若查找到某个节点的key值与参数的key值相等，则表示它就是我们要找的节点，将其返回</span></span><br><span class="line">                <span class="keyword">if</span> (e.hash == hash &amp;&amp;</span><br><span class="line">                    ((k = e.key) == key || (key != <span class="keyword">null</span> &amp;&amp; key.equals(k))))</span><br><span class="line">                    <span class="keyword">return</span> e;</span><br><span class="line">            &#125; <span class="keyword">while</span> ((e = e.next) != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 若没有找到对应的节点，返回null</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;在HashMap中，containsKey方法也是依赖getNode方法实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">containsKey</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getNode(hash(key), key) != <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h3 id="emsp-2-2-put方法源码解读"><a href="#emsp-2-2-put方法源码解读" class="headerlink" title="&emsp;2.2 put方法源码解读"></a>&emsp;2.2 put方法源码解读</h3><p>&emsp;&emsp;看完了<code>get</code>方法的源代码，我们再来看看<code>put</code>方法。<code>put</code>方法的作用是将一对<code>key-value</code>插入到<code>HashMap</code>中，若<code>HashMap</code>中已经存在这个<code>key</code>，则用新的<code>value</code>替换旧的<code>value</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> putVal(hash(key), key, value, <span class="keyword">false</span>, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，<code>put</code>方法比<code>get</code>方法还要简短，和<code>get</code>方法一样，他也是将实现放入了另一个方法中，这个方法叫做<code>putVal</code>。我们先来看看这个方法的签名：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Implements Map.put and related methods</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> hash hash for key</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key the key</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> value the value to put</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> onlyIfAbsent if true, don't change existing value</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> evict if false, the table is in creation mode.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> previous value, or null if none</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> V <span class="title">putVal</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">boolean</span> onlyIfAbsent, <span class="keyword">boolean</span> evict)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;这个方法有5个参数：</p>
+<ol>
+<li><strong>hash</strong>：需要插入的元素，它的<code>key</code>的<code>hash</code>值；</li>
+<li><strong>key</strong>：需要插入的元素的<code>key</code>值；</li>
+<li><strong>value</strong>：需要插入的元素的<code>value</code>值；</li>
+<li><strong>onlyIfAbsent</strong>：一个标识，当它的值为<code>false</code>时，若查询重复的<code>key</code>值，则将用新的<code>value</code>替换原来的<code>value</code>；反之则不替换，留下旧值；</li>
+<li><strong>evict</strong>：在<code>HashMap</code>中无意义，将在子类<code>LinkedHashMap</code>中使用；</li>
+</ol>
+<p>&emsp;&emsp;除了上面五个参数，在<code>putVal</code>中还用来另外成员变量，我们要先明确它们的意义：</p>
+<ol>
+<li><strong>TREEIFY_THRESHOLD</strong>：将链表转换成红黑树的阈值；在<code>HashMap</code>中，若某一条链表上的节点数大于等于<code>TREEIFY_THRESHOLD</code>，那就会将它从链表转换成红黑树，这个值默认为<code>8</code>；</li>
+<li><strong>modCount</strong>：记录<code>HashMap</code>被修改的次数，这里的修改仅仅是指插入和删除；这个变量的作用是为了安全的使用迭代器：迭代器在创建时，会记录下这个值，若迭代器在使用的过程中，<code>modCount</code>与迭代器中记录的值不一致，表示在迭代器被创建后，集合的元素数量发生了改变，这个时候迭代器就不再安全了，此时再使用这个迭代器时将会抛出异常；</li>
+<li><strong>size</strong>：<code>HashMap</code>中，节点的数量；</li>
+<li><strong>threshold</strong>：<code>HashMap</code>中，当前允许放入的最大节点数，当到达这个数量时，<code>HashMap</code>将进行扩容；</li>
+</ol>
+<p>&emsp;&emsp;好了，下面我们就来看看<code>putVal</code>方法的源代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> V <span class="title">putVal</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">boolean</span> onlyIfAbsent,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">boolean</span> evict)</span> </span>&#123;</span><br><span class="line">    HashMap.Node&lt;K,V&gt;[] tab; HashMap.Node&lt;K,V&gt; p; <span class="keyword">int</span> n, i;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 判断当前存储数据的数组是否为null，或者大小为0，若是，则调用resize方法初始化数组</span></span><br><span class="line">    <span class="comment">// resize方法用来初始化HashMap中存储数据的table数组，或者给table扩容（即*2）</span></span><br><span class="line">    <span class="keyword">if</span> ((tab = table) == <span class="keyword">null</span> || (n = tab.length) == <span class="number">0</span>)</span><br><span class="line">        n = (tab = resize()).length;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 判断新值将要插入的位置是否为null，若为null，则用传入的值创建一个新的节点，并放入到这个位置</span></span><br><span class="line">    <span class="keyword">if</span> ((p = tab[i = (n - <span class="number">1</span>) &amp; hash]) == <span class="keyword">null</span>)</span><br><span class="line">        tab[i] = newNode(hash, key, value, <span class="keyword">null</span>);</span><br><span class="line">    <span class="comment">// 若新值将要放入的位置已经存在节点了，则进一步判断</span></span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 若已经存在一个节点，它的key与新值的key相等，则用变量e记录这个节点</span></span><br><span class="line">        <span class="comment">// e的作用就是干这个的，下面很长一段代码都是用来判断是否存在这样一个节点</span></span><br><span class="line">        HashMap.Node&lt;K,V&gt; e; K k;</span><br><span class="line">        <span class="comment">// 若新值将要插入的位置已经存在的节点，它的key值与新值的key相等，</span></span><br><span class="line">        <span class="comment">// 则用变量e记录下它</span></span><br><span class="line">        <span class="keyword">if</span> (p.hash == hash &amp;&amp;</span><br><span class="line">            ((k = p.key) == key || (key != <span class="keyword">null</span> &amp;&amp; key.equals(k))))</span><br><span class="line">            e = p;</span><br><span class="line">        <span class="comment">// 若已经存在的节点是一个Tree节点，则使用树的方法将节点加入</span></span><br><span class="line">        <span class="comment">// 用e接收返回值，此处返回值e不为空，表示这棵树上存在与新值的key相同的节点</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (p <span class="keyword">instanceof</span> HashMap.TreeNode)</span><br><span class="line">            e = ((HashMap.TreeNode&lt;K,V&gt;)p).putTreeVal(<span class="keyword">this</span>, tab, hash, key, value);</span><br><span class="line">        <span class="comment">// 若以上条件均不满足，则表示这个位置不是一棵树，而是一个链表</span></span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 遍历这个链表</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> binCount = <span class="number">0</span>; ; ++binCount) &#123;</span><br><span class="line">                <span class="comment">// 若已经到达这个链表的最后一个节点，则用新值创建一个新的节点，</span></span><br><span class="line">                <span class="comment">// 并将其插入最后一个节点的末端</span></span><br><span class="line">                <span class="keyword">if</span> ((e = p.next) == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    p.next = newNode(hash, key, value, <span class="keyword">null</span>);</span><br><span class="line">                    <span class="comment">// 若插入这个节点后，这条链表的的节点数目已经到达了树化的阈值</span></span><br><span class="line">                    <span class="comment">// 则将这条链表转换为红黑树</span></span><br><span class="line">                    <span class="keyword">if</span> (binCount &gt;= TREEIFY_THRESHOLD - <span class="number">1</span>) <span class="comment">// -1 for 1st</span></span><br><span class="line">                        treeifyBin(tab, hash);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 若在遍历这条链表的过程中，发现了一个节点，它的key值与新值的key相等，则不插入新节点</span></span><br><span class="line">                <span class="comment">// 且此时由于上面的操作，e已经指向了这个key重复的节点，不需要继续遍历了，跳出循环</span></span><br><span class="line">                <span class="keyword">if</span> (e.hash == hash &amp;&amp;</span><br><span class="line">                    ((k = e.key) == key || (key != <span class="keyword">null</span> &amp;&amp; key.equals(k))))</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                <span class="comment">// 这一步赋值没看懂意义何在</span></span><br><span class="line">                p = e;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 判断e是否为null，若不为空，表示在原来的节点中，存在一个key值与新值的key重复的节点</span></span><br><span class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123; <span class="comment">// existing mapping for key</span></span><br><span class="line">            <span class="comment">// 记录下这个节点原来的value值</span></span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            <span class="comment">// 若onlyIfAbsent的值为false，或者原来的value是null，则用新值替换原来的值</span></span><br><span class="line">            <span class="keyword">if</span> (!onlyIfAbsent || oldValue == <span class="keyword">null</span>)</span><br><span class="line">                e.value = value;</span><br><span class="line">            <span class="comment">// 这是一个回调函数，但是在HashMap中是一个空函数，</span></span><br><span class="line">            <span class="comment">// 看源码貌似是留给LinkedHashMap去扩充的，</span></span><br><span class="line">            <span class="comment">// 感觉这个应该属于模板方法设计模式</span></span><br><span class="line">            afterNodeAccess(e);</span><br><span class="line">            <span class="comment">// 返回旧value，如果在这里被返回，则不会执行剩下的代码</span></span><br><span class="line">            <span class="comment">// 也就是说，若执行到剩下的代码，表示并不是执行修改原有值的操作，而是插入了新节点</span></span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 能运行到这里，表示这次进行的是插入操作，而不是修改</span></span><br><span class="line">    <span class="comment">// modCount用来记录Map（仅指插入+删除）被修改的次数</span></span><br><span class="line">    <span class="comment">// 此处modCount+1，因为HashMap被修改了（新插入了一个节点）</span></span><br><span class="line">    ++modCount;</span><br><span class="line">    <span class="comment">// Map中元素的数量+1，并判断元素数量是否到达允许的最大值，若到达，则对Map进行扩容</span></span><br><span class="line">    <span class="keyword">if</span> (++size &gt; threshold)</span><br><span class="line">        resize();</span><br><span class="line">    <span class="comment">// 与上面的afterNodeAccess类似，同为留给LinkedHashMap编写的回调函数</span></span><br><span class="line">    afterNodeInsertion(evict);</span><br><span class="line">    <span class="comment">// 若插入一个新节点，则返回null</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;为了能够更好的理解，上面的代码我都进行了非常详细的注释，希望对看到这篇博客的人能够有所帮助。因为我对红黑树不是很了解，所以在上面的两个方法中，关于树的操作那部分我都没有深入探讨，之后有时间，我会去专门研究一下红黑树，比较这是在集合中，使用的比较多的一个数据结构。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p><a href="https://blog.csdn.net/qq_35321596/article/details/81117669" target="_blank" rel="noopener">https://blog.csdn.net/qq_35321596/article/details/81117669</a><br><a href="https://blog.csdn.net/AJ1101/article/details/79413939" target="_blank" rel="noopener">https://blog.csdn.net/AJ1101/article/details/79413939</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最終更新：<time datetime="2020-02-25T16:59:01.450Z" itemprop="dateUpdated">2020-02-26 00:59:01</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java容器/">Java容器</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/HashMap源码解读——深入理解HashMap高效的原因/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">HashMap源码解读——深入理解HashMap高效的原因</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

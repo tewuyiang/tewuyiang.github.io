@@ -30,7 +30,7 @@
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png">
-<meta property="og:updated_time" content="2020-02-25T10:04:36.598Z">
+<meta property="og:updated_time" content="2020-02-25T15:51:12.506Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HashMap源码解读——深入理解HashMap高效的原因">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
@@ -261,7 +261,7 @@
 <p>&emsp;&emsp;而源码中的按位与运算，实际上就是为了降低<code>hash</code>碰撞进行的<strong>扰动计算</strong>。为什么这么说呢，举个简单的例子：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">HashMap的容量：<span class="number">8</span>  -&gt;  转换成二进制：<span class="number">1000</span></span><br><span class="line"></span><br><span class="line">两个要存如HashMap中的元素的hash值如下（下面两个hash值只有最后<span class="number">4</span>位完全匹配）：</span><br><span class="line">    <span class="number">1</span>、 <span class="number">0010</span> <span class="number">1010</span> <span class="number">0111</span> <span class="number">1001</span> <span class="number">0010</span> <span class="number">0101</span></span><br><span class="line">    <span class="number">2</span>、 <span class="number">0101</span> <span class="number">1101</span> <span class="number">1111</span> <span class="number">0100</span> <span class="number">0111</span> <span class="number">0101</span></span><br><span class="line"></span><br><span class="line">这两个hash值与容量<span class="number">8</span>取模后得到：</span><br><span class="line">    <span class="number">1</span>、<span class="number">0101</span></span><br><span class="line">    <span class="number">2</span>、<span class="number">0101</span></span><br></pre></td></tr></table></figure>
 
-<p>&emsp;&emsp;可以看到，上面例子中的两个<code>hash</code>值差别巨大，但是它们和容量8进行取模后的结果却是一样的，结果发生了<code>hash</code>碰撞。因为容量对于容量<code>8</code>来说，取模的做法是与<code>8-1</code>也就是7做按位与运算，而7转换成二进制的结果是<code>0111</code>，也就是说，取模的结果实际上就是取<code>hash</code>值的后3位，而<code>hash</code>值的前29位无论怎样，都不会影响结果。所以就是上面两个<code>hash</code>值差异巨大，但是后三位相同，导致它们求出的下标是相同的。这种情况下，发生<code>hash</code>碰撞的几率将会大大增加。所以，为了充分利用计算出的<code>hash</code>值的每一位，<code>HashMap</code>的源码做出了一个优化，将计算出的<code>hash</code>值向右移动<code>16</code>位，让后让移动后的值与原<code>hash</code>值做与运算，计算出新的值。为什么是<code>16</code>位呢，因为<code>int</code>是<code>32位</code>的，<code>16位</code>正好是<code>32</code>的一半。这样，就充分利用了<code>hash</code>值的每一位，减少了<code>hash</code>碰撞的发生。</p>
+<p>&emsp;&emsp;可以看到，上面例子中的两个<code>hash</code>值差别巨大，但是它们和容量8进行取模后的结果却是一样的，结果发生了<code>hash</code>碰撞。因为容量对于容量<code>8</code>来说，取模的做法是与<code>8-1</code>也就是<code>7</code>做按位与运算，而7转换成二进制的结果是<code>0111</code>，也就是说，取模的结果实际上就是取<code>hash</code>值的后3位，而<code>hash</code>值的前29位无论怎样，都不会影响结果。所以尽管上面两个<code>hash</code>值差异巨大，但是后三位相同，导致它们求出的下标是相同的。这种情况下，发生<code>hash</code>碰撞的几率将会大大增加。所以，为了充分利用计算出的<code>hash</code>值的每一位，<code>HashMap</code>的源码做出了一个优化，将计算出的<code>hash</code>值向右移动<code>16</code>位，然后让移动后的值与原<code>hash</code>值做与运算，计算出新的值。为什么是<code>16</code>位呢，因为<code>int</code>是<code>32位</code>的，<code>16位</code>正好是<code>32</code>的一半。这样，就充分利用了<code>hash</code>值的每一位，而不是像之前一样，只有最后几位对结果有影响，从而减少了<code>hash</code>碰撞的发生。</p>
 <br>
 
 <h3 id="emsp-2-5-JDK1-8对HashMap结构的优化——红黑树"><a href="#emsp-2-5-JDK1-8对HashMap结构的优化——红黑树" class="headerlink" title="&emsp;2.5 JDK1.8对HashMap结构的优化——红黑树"></a>&emsp;2.5 JDK1.8对HashMap结构的优化——红黑树</h3><p>&emsp;&emsp;其实从<code>JDK1.8</code>开始，<code>HashMap</code>已经不再是简单的<strong>数组+链表</strong>的存储结构，而是做出了一个巨大的变动，在<code>HashMap</code>的数据存储中引入了<strong>红黑树</strong>，变成了<strong>数组+链表+树</strong>的结构。下面我们来简单的谈一谈这种结构。</p>
@@ -287,7 +287,7 @@
     <div class="content">
         
 <span class="post-time">
-    最終更新：<time datetime="2020-02-25T10:04:36.598Z" itemprop="dateUpdated">2020-02-25 18:04:36</time>
+    最終更新：<time datetime="2020-02-25T15:51:12.506Z" itemprop="dateUpdated">2020-02-25 23:51:12</time>
 </span><br>
 
 
@@ -364,7 +364,14 @@
     </div>
 
     
-<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/HashMap源码解读——分析get和put方法的实现/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">HashMap源码解读——逐句分析get和put方法的实现</h4>
+      </a>
+    </div>
   
 
   
