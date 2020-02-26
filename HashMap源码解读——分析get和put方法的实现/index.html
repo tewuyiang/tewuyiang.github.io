@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-02-25T16:59:01.450Z">
+<meta property="og:updated_time" content="2020-02-25T17:02:05.084Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HashMap源码解读——逐句分析get和put方法的实现">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
@@ -131,7 +131,7 @@
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
                 <i class="icon icon-lg icon-chevron-left"></i>
             </a>
-            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
                 <i class="icon icon-lg icon-search"></i>
             </a>
@@ -257,7 +257,7 @@
     <div class="content">
         
 <span class="post-time">
-    最終更新：<time datetime="2020-02-25T16:59:01.450Z" itemprop="dateUpdated">2020-02-26 00:59:01</time>
+    Last updated: <time datetime="2020-02-25T17:02:05.084Z" itemprop="dateUpdated">2020-02-26 01:02:05</time>
 </span><br>
 
 
@@ -334,7 +334,14 @@
     </div>
 
     
-<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/HashMap源码解读——逐句分析resize方法的实现/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">HashMap源码解读——逐句分析resize方法的实现</h4>
+      </a>
+    </div>
   
 
   
@@ -391,7 +398,7 @@
 
         <p>
             
-            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
         </p>
     </div>
     <div class="bottom">

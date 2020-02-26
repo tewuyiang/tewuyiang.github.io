@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>HashMap源码解读——逐句分析resize方法的实现 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java容器">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;最近在阅读HashMap的源码，已经将代码基本过了一遍，对它的实现已经有了一个较为全面的认识。今天就来分享一下HashMap中比较重要的一个方法——resize方法。我将对resize方法的源代码进行逐句的分析。 &amp;emsp;&amp;emsp;若想要看懂这个方法的源代码，首先得对HashMap的底层结构和实现有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博">
+<meta name="keywords" content="Java容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap源码解读——逐句分析resize方法的实现">
+<meta property="og:url" content="https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近在阅读HashMap的源码，已经将代码基本过了一遍，对它的实现已经有了一个较为全面的认识。今天就来分享一下HashMap中比较重要的一个方法——resize方法。我将对resize方法的源代码进行逐句的分析。 &amp;emsp;&amp;emsp;若想要看懂这个方法的源代码，首先得对HashMap的底层结构和实现有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200226202634704-947615510.png">
+<meta property="og:updated_time" content="2020-02-26T12:26:51.923Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HashMap源码解读——逐句分析resize方法的实现">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在阅读HashMap的源码，已经将代码基本过了一遍，对它的实现已经有了一个较为全面的认识。今天就来分享一下HashMap中比较重要的一个方法——resize方法。我将对resize方法的源代码进行逐句的分析。 &amp;emsp;&amp;emsp;若想要看懂这个方法的源代码，首先得对HashMap的底层结构和实现有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博">
+<meta name="twitter:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200226202634704-947615510.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">HashMap源码解读——逐句分析resize方法的实现</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">HashMap源码解读——逐句分析resize方法的实现</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-02-26T10:15:43.000Z" itemprop="datePublished" class="page-time">
+  2020-02-26
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、解析"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、解析</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-resize方法的作用"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 resize方法的作用</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-resize方法中用到的变量"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 resize方法中用到的变量</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-resize方法源码解读"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 resize方法源码解读</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-resize方法中的链表拆分"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 resize方法中的链表拆分</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-HashMap源码解读——逐句分析resize方法的实现"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">HashMap源码解读——逐句分析resize方法的实现</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-02-26 18:15:43" datetime="2020-02-26T10:15:43.000Z"  itemprop="datePublished">2020-02-26</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;最近在阅读<code>HashMap</code>的源码，已经将代码基本过了一遍，对它的实现已经有了一个较为全面的认识。今天就来分享一下<code>HashMap</code>中比较重要的一个方法——<code>resize</code>方法。我将对<code>resize</code>方法的源代码进行逐句的分析。</p>
+<p>&emsp;&emsp;若想要看懂这个方法的源代码，首先得对<code>HashMap</code>的底层结构和实现有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博客对<code>HashMap</code>的底层结构和实现进行了一个比较清晰和全面的讲解，同时博客的最底下附上了两篇阿里架构师对<code>HashMap</code>的分析，写的非常好，很有参考价值：</p>
+<ul>
+<li>Hexo链接 —— <a href="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/">HashMap源码解读——深入理解HashMap高效的原因</a></li>
+<li>博客园链接 —— <a href="https://www.cnblogs.com/tuyang1129/p/12362959.html" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12362959.html</a></li>
+</ul>
+<br>
+
+<h2 id="二、解析"><a href="#二、解析" class="headerlink" title="二、解析"></a>二、解析</h2><h3 id="emsp-2-1-resize方法的作用"><a href="#emsp-2-1-resize方法的作用" class="headerlink" title="&emsp;2.1 resize方法的作用"></a>&emsp;2.1 resize方法的作用</h3><p>&emsp;&emsp;没有阅读过<code>HashMap</code>源码的人可能并不知道它有一个叫<code>resize</code>的方法，因为这不是一个<code>public</code>方法，这个方法并没有加上访问修饰符，也就是说，这个方法<code>HashMap</code>所在的包下使用。很多人应该都知道，<code>HashMap</code>的基本实现是<strong>数组+链表</strong>（从<code>JDK1.8</code>开始已经变成了数组+链表+红黑树），而这个方法的作用也很简单：</p>
+<ol>
+<li>当数组并未初始化时，对数组进行初始化；</li>
+<li>若数组已经初始化，则对数组进行扩容，也就是创建一个两倍大小的新数组，并将原来的元素放入新数组中；</li>
+</ol>
+<br>
+
+<h3 id="emsp-2-2-resize方法中用到的变量"><a href="#emsp-2-2-resize方法中用到的变量" class="headerlink" title="&emsp;2.2 resize方法中用到的变量"></a>&emsp;2.2 resize方法中用到的变量</h3><p>&emsp;&emsp;<code>HashMap</code>中定义了很多的成员变量，而很多都在<code>resize</code>方法中有用到，所以为了看懂这个方法，首先需要了解这些变量的含义：</p>
+<ul>
+<li><strong>table</strong>：用来存储数据的数组，即数组+链表结构的数组部分；</li>
+<li><strong>threshold</strong>：阈值，表示当前允许存入的元素数量，当元素数量超过这个值时，将进行扩容；</li>
+<li><strong>MAXIMUM_CAPACITY</strong>：<code>HashMap</code>允许的最大容量，值为<code>1&lt;&lt;30</code>，也就是<code>2^30</code>；</li>
+<li><strong>DEFAULT_INITIAL_CAPACITY</strong>：<code>HashMap</code>的默认初始容量，值为<code>16</code>；</li>
+<li><strong>loadFactor</strong>：负载因子，表示<code>HashMap</code>中的元素数量可以到达总容量的百分之多少，默认是<code>75%</code>，也就是说，默认情况下，当元素数量达到总容量的<code>75%</code>时，将进行扩容；</li>
+<li><strong>DEFAULT_LOAD_FACTOR</strong>：负载因子的默认值，也就是<code>0.75</code>；</li>
+</ul>
+<br>
+
+<h3 id="emsp-2-3-resize方法源码解读"><a href="#emsp-2-3-resize方法源码解读" class="headerlink" title="&emsp;2.3 resize方法源码解读"></a>&emsp;2.3 resize方法源码解读</h3><p>&emsp;&emsp;下面就来看看resize方法的源码吧，我用注释的方式，对每一句代码进行了解读：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Initializes or doubles table size.  If null, allocates in</span></span><br><span class="line"><span class="comment"> * accord with initial capacity target held in field threshold.</span></span><br><span class="line"><span class="comment"> * Otherwise, because we are using power-of-two expansion, the</span></span><br><span class="line"><span class="comment"> * elements from each bin must either stay at same index, or move</span></span><br><span class="line"><span class="comment"> * with a power of two offset in the new table.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the table</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">final</span> HashMap.Node&lt;K,V&gt;[] resize() &#123;</span><br><span class="line">    HashMap.Node&lt;K,V&gt;[] oldTab = table;</span><br><span class="line">    <span class="comment">// 记录Map当前的容量</span></span><br><span class="line">    <span class="keyword">int</span> oldCap = (oldTab == <span class="keyword">null</span>) ? <span class="number">0</span> : oldTab.length;</span><br><span class="line">    <span class="comment">// 记录Map允许存储的元素数量，即阈值（容量*负载因子）</span></span><br><span class="line">    <span class="keyword">int</span> oldThr = threshold;</span><br><span class="line">    <span class="comment">// 声明两个变量，用来记录新的容量和阈值</span></span><br><span class="line">    <span class="keyword">int</span> newCap, newThr = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 若当前容量不为0，表示存储数据的数组已经被初始化过</span></span><br><span class="line">    <span class="keyword">if</span> (oldCap &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 判断当前容量是否超过了允许的最大容量</span></span><br><span class="line">        <span class="keyword">if</span> (oldCap &gt;= MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            <span class="comment">// 若超过最大容量，表示无法再进行扩容</span></span><br><span class="line">            <span class="comment">// 则更新当前的阈值为int的最大值，并返回旧数组</span></span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            <span class="keyword">return</span> oldTab;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 将旧容量*2得到新容量，若新容量未超过最大值，并且旧容量大于默认初始容量（16），</span></span><br><span class="line">        <span class="comment">// 才则将旧阈值*2得到新阈值</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> ((newCap = oldCap &lt;&lt; <span class="number">1</span>) &lt; MAXIMUM_CAPACITY &amp;&amp;</span><br><span class="line">                 oldCap &gt;= DEFAULT_INITIAL_CAPACITY)</span><br><span class="line">            newThr = oldThr &lt;&lt; <span class="number">1</span>; <span class="comment">// double threshold</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 若不满足上面的oldCap &gt; 0，表示数组还未初始化，</span></span><br><span class="line">    <span class="comment">// 若当前阈值不为0，就将数组的新容量记录为当前的阈值；</span></span><br><span class="line">    <span class="comment">// 为什么这里的oldThr在未初始化数组的时候就有值呢？</span></span><br><span class="line">    <span class="comment">// 这是因为HashMap有两个带参构造器，可以指定初始容量，</span></span><br><span class="line">    <span class="comment">// 若你调用了这两个可以指定初始容量的构造器，</span></span><br><span class="line">    <span class="comment">// 这两个构造器就会将阈值记录为第一个大于等于你指定容量，且满足2^n的数（可以看看这两个构造器）</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (oldThr &gt; <span class="number">0</span>) <span class="comment">// initial capacity was placed in threshold</span></span><br><span class="line">        newCap = oldThr;</span><br><span class="line">    <span class="comment">// 若上面的条件都不满足，表示你是调用默认构造器创建的HashMap，且还没有初始化table数组</span></span><br><span class="line">    <span class="keyword">else</span> &#123;               <span class="comment">// zero initial threshold signifies using defaults</span></span><br><span class="line">        <span class="comment">// 则将新容量更新为默认初始容量（10）</span></span><br><span class="line">        <span class="comment">// 阈值即为（容量*负载因子）</span></span><br><span class="line">        newCap = DEFAULT_INITIAL_CAPACITY;</span><br><span class="line">        newThr = (<span class="keyword">int</span>)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 经过上面的步骤后，newCap一定有值，但是若运行的是上面的第二个分支时，newThr还是0</span></span><br><span class="line">    <span class="comment">// 所以若当前newThr还是0，则计算出它的值（容量*负载因子）</span></span><br><span class="line">    <span class="keyword">if</span> (newThr == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">float</span> ft = (<span class="keyword">float</span>)newCap * loadFactor;</span><br><span class="line">        newThr = (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (<span class="keyword">float</span>)MAXIMUM_CAPACITY ?</span><br><span class="line">                  (<span class="keyword">int</span>)ft : Integer.MAX_VALUE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将计算出的新阈值更新到成员变量threshold上</span></span><br><span class="line">    threshold = newThr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建一个记录新数组用来存HashMap中的元素</span></span><br><span class="line">    <span class="comment">// 若数组不是第一次初始化，则这里就是创建了一个两倍大小的新数组</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(&#123;<span class="string">"rawtypes"</span>,<span class="string">"unchecked"</span>&#125;)</span><br><span class="line">    HashMap.Node&lt;K,V&gt;[] newTab = (HashMap.Node&lt;K,V&gt;[])<span class="keyword">new</span> HashMap.Node[newCap];</span><br><span class="line">    <span class="comment">// 将新数组的引用赋值给成员变量table</span></span><br><span class="line">    table = newTab;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 开始将原来的数据加入到新数组中</span></span><br><span class="line">    <span class="keyword">if</span> (oldTab != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历原数组</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; oldCap; ++j) &#123;</span><br><span class="line">            HashMap.Node&lt;K,V&gt; e;</span><br><span class="line">            <span class="comment">// 若原数组的j位置有节点存在，才进一步操作</span></span><br><span class="line">            <span class="keyword">if</span> ((e = oldTab[j]) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// 清除旧数组对节点的引用</span></span><br><span class="line">                oldTab[j] = <span class="keyword">null</span>;</span><br><span class="line">                <span class="comment">// 若table数组的j位置只有一个节点，则直接将这个节点放入新数组</span></span><br><span class="line">                <span class="comment">// 使用 &amp; 替代 % 计算出余数，即下标</span></span><br><span class="line">                <span class="keyword">if</span> (e.next == <span class="keyword">null</span>)</span><br><span class="line">                    newTab[e.hash &amp; (newCap - <span class="number">1</span>)] = e;</span><br><span class="line">                <span class="comment">// 若第一个节点是一个数节点，表示原数组这个位置的链表已经被转为了红黑树</span></span><br><span class="line">                <span class="comment">// 则调用红黑树的方法将节点加入到新数组中</span></span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span> (e <span class="keyword">instanceof</span> HashMap.TreeNode)</span><br><span class="line">                    ((HashMap.TreeNode&lt;K,V&gt;)e).split(<span class="keyword">this</span>, newTab, j, oldCap);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 上面两种情况都不满足，表示这个位置是一条不止一个节点的链表</span></span><br><span class="line">                <span class="comment">// 以下操作相对复杂，所以单独拿出来讲解</span></span><br><span class="line">                <span class="keyword">else</span> &#123; <span class="comment">// preserve order</span></span><br><span class="line">                    HashMap.Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">                    HashMap.Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">                    HashMap.Node&lt;K,V&gt; next;</span><br><span class="line">                    <span class="keyword">do</span> &#123;</span><br><span class="line">                        next = e.next;</span><br><span class="line">                        <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123;</span><br><span class="line">                            <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">                                loHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                loTail.next = e;</span><br><span class="line">                            loTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">                                hiHead = e;</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                hiTail.next = e;</span><br><span class="line">                            hiTail = e;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line">                    <span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        loTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        newTab[j] = loHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">                        newTab[j + oldCap] = hiHead;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 将新创建的数组返回</span></span><br><span class="line">    <span class="keyword">return</span> newTab;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面的代码中，最后一部分比较难理解，所以我将在下面单独拿出来讲解。</p>
+<br>
+
+<h3 id="emsp-2-4-resize方法中的链表拆分"><a href="#emsp-2-4-resize方法中的链表拆分" class="headerlink" title="&emsp;2.4 resize方法中的链表拆分"></a>&emsp;2.4 resize方法中的链表拆分</h3><p>&emsp;&emsp;<code>resize</code>方法中的最后一部分，是将原数组中的一条链表的节点，放入到扩容后的新数组中，而这一部分相对来说比较难理解。首先我们得知道是怎么实现的，然后再来逐句分析代码。</p>
+<p>&emsp;&emsp;首先，我们得知道一个结论，那就是：<strong>原数组中一条链表上的所有节点，若将它们加入到扩容后的新数组中，它们最多将会分布在新数组中的两条链表上</strong>。</p>
+<p>&emsp;&emsp;在<code>HashMap</code>中，使用按位与运算替代了取模运算来计算下标，因为<strong><code>num % 2^n == num &amp; (2^n - 1)</code></strong>，而<code>HashMap</code>的容量一定是<code>2^n</code>，所以可以使用这条定理（这里我假设大家已经了解了<code>HashMap</code>的容量机制，若不了解的，可以先看看我最上面给出的那篇博客）。我们看下面这张图，左边是扩容前的数组+链表，右边是扩容后的数组+链表，链表矩形中的数字表示节点的<code>hash</code>值。左边数组的容量为<code>2^3==8</code>，只包含一条四个节点的链表，右边数组的容量为<code>2^4 == 16</code>，左边链表上的节点重新存储后，变成了右边两条链表。正对应了我们上面说的结论。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200226202634704-947615510.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;那这个结论是怎么来的呢？我们先说左边第一个节点，它的<code>hash</code>值是<code>2</code>，转换成二进制就是<code>0010</code>，而容量为<code>2^3 == 8</code>，通过<code>num % 2^n == num &amp; (2^n - 1)</code>这个公式，我们知道<code>2</code>与容量<code>8</code>的余数是<code>2 &amp; （8 - 1） == 0010 &amp; 0111 == 0010</code>。<strong>任何数与0111做与运算（&amp;），实际上就是取这个数二进制的最后三位</strong>。而扩容之后，容量变成了<code>2^4 == 16</code>，这时候，取模就是与<code>16-1 == 15</code>做与运算了，而<code>15</code>的二进制是<code>1111</code>，我们发现，<code>1111</code>与之前的<code>0111</code>唯一的区别就是第四位也变成了1（以下说的第几位都是从右往左）。而<code>2 &amp; 15 == 0010 &amp; 1111 == 0010</code>，和<code>0010 &amp; 0111</code> 结果是一样的。为什么？因为<code>0010</code>的第四位是<code>0</code>，所以从<code>0111</code>变成<code>1111</code>，并不会对计算结果造成影响，因为<code>0</code>和任何数做与运算，结果都是<code>0</code>。所以扩容后，<code>2</code>这个节点，还是放在数字下标为<code>2</code>的位置。我们在来看看剩下的三个数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">hash值为<span class="number">10</span>，转换成二进制<span class="number">1010</span>，<span class="number">1010</span>的第四位为<span class="number">1</span>，所以 <span class="number">1010</span> &amp; <span class="number">0111</span> != <span class="number">1010</span> &amp; <span class="number">1111</span></span><br><span class="line"></span><br><span class="line">hash值为<span class="number">18</span>，转换成二进制<span class="number">10010</span>，<span class="number">10010</span>的第四位为<span class="number">0</span>，所以 <span class="number">10010</span> &amp; <span class="number">0111</span> == <span class="number">10010</span> &amp; <span class="number">1111</span></span><br><span class="line">    </span><br><span class="line">hash值为<span class="number">26</span>，转换成二进制<span class="number">11010</span>，<span class="number">11010</span>的第四位为<span class="number">1</span>，所以 <span class="number">11010</span> &amp; <span class="number">0111</span> != <span class="number">11010</span> &amp; <span class="number">1111</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;所以扩容后，余数是否发生改变，实际上只取决于多出来的那一位而已，那一位只有两种结果：<code>0</code>或者<code>1</code>，所以这些节点的新下标最终也只有两种结果。而多出来的那一位是哪一位呢？<code>8</code>转换成二进制是<code>1000</code>，而从<code>8</code>扩容到<code>16</code>，取余的数从<code>0111</code>变成了<code>1111</code>，多出的这个<code>1</code>刚好在第四位，也就是<code>1000</code>中，唯一一个<code>1</code>所在的位置；<code>16</code>的二进制是<code>10000</code>，扩容成<code>32</code>后，取余的数从<code>1111</code>变成<code>11111</code>，在第五位多出了一个<code>1</code>，正好是<code>10000</code>的1所在的位置。所以我们可以知道，扩容后，节点的下标是否需要发生改变，取决于旧容量的二进制中，<code>1</code>那一位。所以容量为<code>8</code>，扩容后，若节点的二进制<code>hash</code>值的第四位为<code>0</code>，则节点在新数组中的下标不变；若为<code>1</code>，节点的下标改变，而且改变的大小正好是<code>+8</code>，因为多出了最高位的<code>1</code>，例如<code>1010 &amp; 0111 = 0010</code>，而<code>1010 &amp; 1111 = 1010</code>，结果相差<code>1000</code>，也就是旧容量的大小<code>8</code>；所以若下标要发生改变，改变的大小将正好是旧数组的容量。</p>
+<p>&emsp;&emsp;我们如何判断<code>hash</code>值多出来的那一位是<code>0</code>还是<code>1</code>呢，很简单，只要用<code>hash</code>值与旧容量做与运算，结果不为<code>0</code>表示多出的这一位是<code>1</code>，否则就是0。比如说，容量为<code>8</code>（二进制<code>1000</code>），扩容后多出来的是第四位，于是让<code>hash</code>值与<code>1000</code>做与运算，若<code>hash</code>值的第四位是<code>1</code>，与<code>1000</code>做与运算后结果就是<code>1000</code>，若第四位是<code>0</code>，与<code>1000</code>做与运算后就是<code>0</code>。好，下面我们来看看代码吧：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建两个头尾节点，表示两条链表</span></span><br><span class="line"><span class="comment">// 因为旧链表上的元素放入新数组中，最多将变成两条链表</span></span><br><span class="line"><span class="comment">// 一条下标不变的链表，一条下标+oldCap</span></span><br><span class="line">HashMap.Node&lt;K,V&gt; loHead = <span class="keyword">null</span>, loTail = <span class="keyword">null</span>;</span><br><span class="line">HashMap.Node&lt;K,V&gt; hiHead = <span class="keyword">null</span>, hiTail = <span class="keyword">null</span>;</span><br><span class="line">HashMap.Node&lt;K,V&gt; next;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 循环遍历原链表上的每一个节点</span></span><br><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">    <span class="comment">// 记录当前节点的下一个节点</span></span><br><span class="line">    next = e.next;</span><br><span class="line">    <span class="comment">// 注意：e.hash &amp; oldCap这一步就是前面说的判断多出的这一位是否为1</span></span><br><span class="line">    <span class="comment">// 若与原容量做与运算，结果为0，表示将这个节点放入到新数组中，下标不变</span></span><br><span class="line">    <span class="keyword">if</span> ((e.hash &amp; oldCap) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 若这是不变链表的第一个节点，用loHead记录</span></span><br><span class="line">        <span class="keyword">if</span> (loTail == <span class="keyword">null</span>)</span><br><span class="line">            loHead = e;</span><br><span class="line">        <span class="comment">// 否则，将它加入下标不变链表的尾部</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            loTail.next = e;</span><br><span class="line">        <span class="comment">// 更新尾部指针指向新加入的节点</span></span><br><span class="line">        loTail = e;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 若与原容量做与运算，结果为1，表示将这个节点放入到新数组中，下标将改变</span></span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 若这是改变下标链表的第一个节点，用hiHead记录</span></span><br><span class="line">        <span class="keyword">if</span> (hiTail == <span class="keyword">null</span>)</span><br><span class="line">            hiHead = e;</span><br><span class="line">        <span class="comment">// 否则，将它加入改变下标链表的尾部</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            hiTail.next = e;</span><br><span class="line">        <span class="comment">// 更新尾部指针指向新加入的节点</span></span><br><span class="line">        hiTail = e;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">while</span> ((e = next) != <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 所有节点遍历完后，判断下标不变的链表是否有节点在其中</span></span><br><span class="line"><span class="keyword">if</span> (loTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="comment">// 将这条链表的最后一个节点的next指向null</span></span><br><span class="line">    loTail.next = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 同时将其放入新数组的相同位置</span></span><br><span class="line">    newTab[j] = loHead;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 另一条链表与上同理</span></span><br><span class="line"><span class="keyword">if</span> (hiTail != <span class="keyword">null</span>) &#123;</span><br><span class="line">    hiTail.next = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 这条链表放入的位置要在原来的基础上加上oldCap</span></span><br><span class="line">    newTab[j + oldCap] = hiHead;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;resize的逻辑并不算太难，可能只有链表拆分这一部分比较难理解。为了能尽可能地说清楚，我描述的可能有点啰嗦了，希望对看到的人能够有所帮助吧。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p><a href="https://blog.csdn.net/weixin_41565013/article/details/93190786" target="_blank" rel="noopener">https://blog.csdn.net/weixin_41565013/article/details/93190786</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-02-26T12:26:51.923Z" itemprop="dateUpdated">2020-02-26 20:26:51</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java容器/">Java容器</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&title=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&title=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/HashMap源码解读——分析get和put方法的实现/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">HashMap源码解读——逐句分析get和put方法的实现</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&title=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&title=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析resize方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/HashMap源码解读——逐句分析resize方法的实现/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
