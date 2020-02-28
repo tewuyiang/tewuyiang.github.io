@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>计算机网络——HTTP协议详解 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="计算机网络">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;前段时间为了研究计算机网络，看了看《计算机网络自顶向下方法》这本书。不得不说这真是一本好书，内容详细，而且讲解的浅显易懂，采用了大量类比的方式进行讲解，而不是单纯的叙述理论，同时在每一章的后面都有大量的练习题以及很有意思的编程题，所以开头先来推荐一波。这本书我暂时只看到了第二章，刚看完HTTP的内容，所以写一篇HTTP相关的博客，就当是记笔记了。   二、详解&amp;em">
+<meta name="keywords" content="计算机网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络——HTTP协议详解">
+<meta property="og:url" content="https://tewuyiang.github.io/Http协议详解/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;前段时间为了研究计算机网络，看了看《计算机网络自顶向下方法》这本书。不得不说这真是一本好书，内容详细，而且讲解的浅显易懂，采用了大量类比的方式进行讲解，而不是单纯的叙述理论，同时在每一章的后面都有大量的练习题以及很有意思的编程题，所以开头先来推荐一波。这本书我暂时只看到了第二章，刚看完HTTP的内容，所以写一篇HTTP相关的博客，就当是记笔记了。   二、详解&amp;em">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002249412-1888739303.jpg">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002321829-202334518.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002351121-1946377900.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002410926-1503453962.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002435589-487888563.png">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002758921-446821065.png">
+<meta property="og:updated_time" content="2020-02-28T16:40:51.754Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机网络——HTTP协议详解">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前段时间为了研究计算机网络，看了看《计算机网络自顶向下方法》这本书。不得不说这真是一本好书，内容详细，而且讲解的浅显易懂，采用了大量类比的方式进行讲解，而不是单纯的叙述理论，同时在每一章的后面都有大量的练习题以及很有意思的编程题，所以开头先来推荐一波。这本书我暂时只看到了第二章，刚看完HTTP的内容，所以写一篇HTTP相关的博客，就当是记笔记了。   二、详解&amp;em">
+<meta name="twitter:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002249412-1888739303.jpg">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">计算机网络——HTTP协议详解</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="検索">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">计算机网络——HTTP协议详解</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-02-27T12:44:25.000Z" itemprop="datePublished" class="page-time">
+  2020-02-27
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、详解"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、详解</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-HTTP概述"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 HTTP概述</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-非持续连接和持续连接的HTTP"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 非持续连接和持续连接的HTTP</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-HTTP报文格式"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 HTTP报文格式</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-Web缓存器"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 Web缓存器</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-条件GET方法"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 条件GET方法</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-Http协议详解"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">计算机网络——HTTP协议详解</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-02-27 20:44:25" datetime="2020-02-27T12:44:25.000Z"  itemprop="datePublished">2020-02-27</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;前段时间为了研究计算机网络，看了看《计算机网络自顶向下方法》这本书。不得不说这真是一本好书，内容详细，而且讲解的浅显易懂，采用了大量类比的方式进行讲解，而不是单纯的叙述理论，同时在每一章的后面都有大量的练习题以及很有意思的编程题，所以开头先来推荐一波。这本书我暂时只看到了第二章，刚看完<code>HTTP</code>的内容，所以写一篇<code>HTTP</code>相关的博客，就当是记笔记了。</p>
+<br>
+
+<h2 id="二、详解"><a href="#二、详解" class="headerlink" title="二、详解"></a>二、详解</h2><h3 id="emsp-2-1-HTTP概述"><a href="#emsp-2-1-HTTP概述" class="headerlink" title="&emsp;2.1 HTTP概述"></a>&emsp;2.1 HTTP概述</h3><p>&emsp;&emsp;<code>HTTP</code>是一个应用层的协议，全称是<strong>超文本传输协议</strong>，它是<code>web</code>的核心。<code>HTTP</code>由两个程序实现——客户端程序和服务端程序，而<code>HTTP</code>的作用简单来说就是<strong>客户端向服务器发请求，而服务器根据请求做出响应</strong>。<code>HTTP</code>定义了<code>Web</code>客户端向服务器请求资源的方式，以及<code>Web</code>服务器向客户端回送资源的方式，也就是<code>HTTP</code>的<strong>请求+响应</strong>模型。客户端向服务器发送请求报文请求资源，服务器接收到请求，向客户端回送包含这些资源的响应报文。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002249412-1888739303.jpg" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;<code>HTTP</code>基于<code>TCP</code>协议，由<code>TCP</code>协议支持数据的传输，这说明<strong>HTTP协议是一个面向连接的可靠协议</strong>。当客户端向服务器请求资源时，首先将与服务器建立一个<code>TCP</code>连接，当<code>TCP</code>连接建立成功时，客户端和服务器之间就可以通过套接字接口访问<code>TCP</code>，客户端通过<code>TCP</code>连接传输请求报文，而服务器也通过这个<code>TCP</code>连接回送响应报文及资源。由于<code>TCP</code>的可靠传输，保证了<code>HTTP</code>的报文一定能够完整的送到服务器上，而服务器的响应也能完整的回送到客户。</p>
+<p>&emsp;&emsp;<code>HTTP</code>请求的资源一般是一个<code>Web</code>页面，而一个<code>Web</code>页面是由一个或多个<strong>对象</strong>组成的，这个对象可能是一个<code>html</code>文件，一张图片，甚至是一段视频或者小程序。对于<code>HTTP</code>来说，组成一个<code>Web</code>页面的这些对象并不属于同一个资源，每一个对象都是一个单独的资源，需要逐一请求。假设我们向服务器请求一个<code>Web</code>页面，这个页面由一个<code>html</code>文件以及<code>5</code>张图片组成（<code>html</code>通过路径引用图片），则这个页面共有<code>6</code>个对象，当服务器接收到客户端对页面的请求后，将<code>html</code>文件通过响应报文返回，而客户端接收到响应的<code>html</code>文件后，发现它还引用了<code>5</code>张图片，这时客户端将再次发送<code>5</code>个<code>HTTP</code>请求，来分别请求这<code>5</code>张图片。</p>
+<p>&emsp;&emsp;服务器向客户端发送被请求的文件，但是不记录任何客户的信息，所以当你连续向服务器请求同一份资源两次时，服务器也会给你响应两次，不会因为你已经请求过就不给你响应了。正是因为<code>HTTP</code>不记录客户的信息，所以它也是一个<strong>无状态协议</strong>。</p>
+<br>
+
+<h3 id="emsp-2-2-非持续连接和持续连接的HTTP"><a href="#emsp-2-2-非持续连接和持续连接的HTTP" class="headerlink" title="&emsp;2.2 非持续连接和持续连接的HTTP"></a>&emsp;2.2 非持续连接和持续连接的HTTP</h3><p>&emsp;&emsp;大多数情况下，我们对<code>Web</code>服务器发出请求时，都不止发出一个请求，比如上面说到的包含5张图片的页面。那这个时候就需要考虑一个问题，对于这多次目的地相同的请求/响应，<code>HTTP</code>是对每一个请求/响应使用同一个<code>TCP</code>连接，还是每次请求单独创建一个<code>TCP</code>连接呢？这里就分两种情况，多次请求/响应使用同一个<code>TCP</code>连接的被称为<strong>持续连接</strong>，而每个请求/响应单独使用一个<code>TCP</code>连接，则被称为<strong>非持续连接</strong>。而<code>HTTP</code>默认使用的是持续连接，但是也可以通过配置，改用非持续连接。下面就来简单说一说两者的区别。</p>
+<p>&emsp;&emsp;<strong>（1）非持续连接</strong></p>
+<p>&emsp;&emsp;非持续连接表示对于每一个请求/响应，都将单独建立一个<code>TCP</code>连接来进行。假设我们还是以之前说过的例子来讲解：我们向服务器请求一个包含<code>5</code>张图片的页面，而页面的路径假设就是<a href="HTTP://www.tewuyiang.cn/index.html" target="_blank" rel="noopener">HTTP://www.tewuyiang.cn/index.html</a>（这是我的个人服务器，目前部署了一个制作简单的小游戏），当我们请求这个路径时，将发生以下情况：</p>
+<ol>
+<li><code>HTTP</code>客户进程通过80端口向服务器<code>www.tewuyiang.cn</code>发起一个<code>TCP</code>连接，<code>80</code>端口时<code>HTTP</code>的默认端口；</li>
+<li><code>HTTP</code>客户进程通过套接字向服务器发送一个请求报文，请求资源的路径为<code>/index.html</code>；</li>
+<li><code>HTTP</code>服务器进程通过套接字接收到该请求，从它的存储器（如：RAM）中搜索<a href="HTTP://www.tewuyiang.cn/index.html" target="_blank" rel="noopener">HTTP://www.tewuyiang.cn/index.html</a>这个资源，生成一份响应报文，并将<code>html</code>页面封装进响应报文中，并通过套接字将此报文回送给客户端；</li>
+<li><code>HTTP</code>服务器通知<code>TCP</code>断开连接（但是直到<code>TCP</code>确认客户端已经接收到完整的报文后，才会将连接断开）；</li>
+<li><code>HTTP</code>客户进程完整的接收到响应报文好，<code>TCP</code>连接断开。客户端解析响应报文后，发现封装的对象是一个<code>html</code>文件，且<code>html</code>文件包含<code>5</code>张图片的引用；</li>
+<li>重复上面步骤<code>1-4</code>，请求页面包含的<code>5</code>张图片；</li>
+</ol>
+<p>&emsp;&emsp;非持续连接的缺点很明显，那就是对于每一个请求/响应都需要建立<code>TCP</code>连接，这样将导致服务器需要维护的连接大大增加，比如一个页面包含<code>10</code>张图片，那总共就得<code>2</code>建立<code>11</code>给连接，这样将给服务器造成巨大的压力。而好处就是，多个连接可以同时建立（一个浏览器一般可以同时建立<code>5-10</code>个连接），表示有多个通道，通道之间传输数据是并行的，多个请求/响应可以同时进行，这样就不会造成排队的情况，效率较高。</p>
+<p>&emsp;&emsp;<strong>（2）持续连接</strong></p>
+<p>&emsp;&emsp;持续连接表示某个客户端与一个服务器建立连接后，在一段时间内，向服务器发送的请求以及服务器发送的响应，都可以通过这一条连接来进行。这个应该很好理解。而持续连接也分为两种：</p>
+<ol>
+<li>不带流水线的持续连接：这表示一次性只能进行一个请求/响应，而下一个必须得等上一次完成后才进行；</li>
+<li>带流水线的持续连接：这表示对对象的请求可以一个个发出，而不需要等未完成的请求结束（但不是完全并行）；</li>
+</ol>
+<p>&emsp;&emsp;对于长时间未使用的连接，<code>HTTP</code>会将它关闭，而这个超时时间也可以进行配置。</p>
+<p>&emsp;&emsp;持续连接的好处也很明显，那就是节省资源，多个请求共用一个连接；但是缺点就是效率可能相对要低一些。<strong>HTTP的默认模式就是带流水线的持续连接</strong>。</p>
+<br>
+
+<h3 id="emsp-2-3-HTTP报文格式"><a href="#emsp-2-3-HTTP报文格式" class="headerlink" title="&emsp;2.3 HTTP报文格式"></a>&emsp;2.3 HTTP报文格式</h3><p>&emsp;&emsp;接下来，我们就来谈一谈HTTP协议的报文格式吧。<code>HTTP</code>的报文分为请求报文和响应报文。</p>
+<p>&emsp;&emsp;<strong>（1）请求报文</strong></p>
+<p>&emsp;&emsp;下面是一段我从浏览器截取下来的<code>HTTP</code>的请求报文，请求的资源是一张图片：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002321829-202334518.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;<code>HTTP</code>请求报文的第一行为<strong>请求行</strong>，剩下的都叫<strong>首部行</strong>，下面我来一行一行解释上面的内容：</p>
+<p>&emsp;&emsp;首先是第一行，也就是请求行，它包含三部分内容：<strong>请求方法，资源路径，HTTP协议版本</strong>，它们三者由空格隔开。第一部分的请求方法表示客户端向浏览器发送的请求的类别，我们常用的请求方式是<code>GET</code>和<code>POST</code>请求：</p>
+<ul>
+<li><strong>GET</strong>：向服务器请求资源，服务器将请求的资源返回；</li>
+<li><strong>POST</strong>：向服务器提交数据并请求处理（比如说提交表单），数据被包含在请求体中。<code>POST</code>请求可能会导致新的资源的建立和/或已有资源的修改；</li>
+</ul>
+<p>&emsp;&emsp;上面两个请求方式都是<code>HTTP1.0</code>中定义的，而<code>HTTP1.0</code>除了上面两个请求方法，还有一个<code>HEAD</code>请求：</p>
+<ul>
+<li><strong>HEAD</strong>：类似于 GET 请求，只不过返回的响应中没有具体的内容，用于获取报头；</li>
+</ul>
+<p>&emsp;&emsp;在<code>HTTP1.1</code>中，又新增了六种请求，分别是<code>OPTIONS</code>、<code>PUT</code>、<code>PATCH</code>、<code>DELETE</code>、<code>TRACE</code> 和 <code>CONNECT</code>方法，它们的定义我就不一个个列出来了，大家可以点击后面的连接查阅——<a href="https://www.runoob.com/http/http-methods.html" target="_blank" rel="noopener">HTTP请求方法</a>。</p>
+<p>&emsp;&emsp;紧随请求方法之后的是资源在<code>HTTP</code>服务器上的路径，报文中的路径是<code>/img/prop3.png</code>，表示我们请求的是<code>HTTP</code>服务器路径下，<code>img</code>文件夹下的<code>prop3.png</code>这张图片。这之后的<code>HTTP1.1</code>表示的就是这次请求使用的<code>HTTP</code>的版本了。</p>
+<p>&emsp;&emsp;请求行下面的都是首部行，而首部行都是<strong><code>name: value</code></strong>格式的，<code>name</code>表示这个首部的名字，而<code>value</code>就是首部的具体值了。第一个首部行的名字叫<code>Host</code>，表示的是<code>HTTP</code>服务器所在的地址，而这里的地址是<a href="HTTP://www.tewuyiang.cn" target="_blank" rel="noopener">www.tewuyiang.cn</a>。第二个首部行的名字是<code>Connection</code>，这个表示的就是我们上面提到的<code>HTTP</code>的连接类型了，而它的值是<code>keep-alive</code>，就是告诉服务器，使用的是持续连接，若值为close，表示的就是非持续连接。第三个首部行<code>User-Agent</code>的作用就是指明用户代理，也就是告诉服务器，发送这次HTTP请求的浏览器的类型。第四个首部行Accept的作用告诉服务器自己希望接收的资源的类型，若服务器响应的资源与此不一致，将会报错，而从上面的报文中可以看出，这个请求希望受到一张图片。<code>Referer</code>的作用是用来防止恶意请求，提高访问资源的安全性。<code>Accept-Encoding</code>的作用是告知服务器，当前浏览器支持的编码类型。<code>Accept-Language</code>的作用是告知<code>HTTP</code>服务器客户端想要获取资源的语言版本，若服务器中不包含此语言版本，则将回送默认版本。</p>
+<p>&emsp;&emsp;下面这张图是<code>HTTP</code>请求报文的标准格式：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002351121-1946377900.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<p>&emsp;&emsp;<strong>（2）响应报文</strong></p>
+<p>&emsp;&emsp;同样，我们先来看一段响应报文：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002410926-1503453962.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;响应报文的第一段由两部分组成，分别是<strong>HTTP版本</strong>以及<strong>状态码</strong>，上面的报文中，<code>HTTP</code>的版本为<code>1.1</code>，与请求的版本相同，之后紧跟的状态码为<code>200</code>，这是最常见的状态码，表示请求成功。若还想知道其他状态码，可以点击<a href="https://www.runoob.com/http/http-status-codes.html" target="_blank" rel="noopener">菜鸟教程</a>查阅，这里列出常见的四种：</p>
+<ul>
+<li>200 - 请求成功；</li>
+<li>301 - 资源（网页等）被永久转移到其它URL；</li>
+<li>404 - 请求的资源（网页等）不存在；</li>
+<li>500 - 内部服务器错误；</li>
+</ul>
+<p>&emsp;&emsp;第一行之后的这些行，被称为<strong>首部行</strong>，与请求报文中的首部行类似，也是<strong><code>name: value</code></strong>。第一个首部行的名称叫做<code>Accept-Ranges</code>，它的作用是告知客户端，此资源是否支持范围请求，而范围请求可以支持<strong>断点续传</strong>和<strong>多线程分片下载</strong>，<code>bytes</code>表示支持，而<code>none</code>表示不支持。<code>Last-Modified</code>的作用后面说缓存时单独拿出来说。<code>Content-type</code>的作用就是标识资源的类型，这里<code>image/png</code>表示资源是一张图片。<code>Content-Length</code>表示资源的字节数，图片中的值是<code>8729</code>，表示这张图片共有<code>8729</code>个字节。最后一个<code>Date</code>的作用就是表示服务器发送该响应报文的日期时间。</p>
+<p>&emsp;&emsp;下面这一张是<code>HTTP</code>响应报文的标准格式，可以看到，在最后面还有一个叫<strong>实体体</strong>的部分，这里就是用来放服务器回送的资源的，例如请求的图片。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002435589-487888563.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h3 id="emsp-2-4-Web缓存器"><a href="#emsp-2-4-Web缓存器" class="headerlink" title="&emsp;2.4 Web缓存器"></a>&emsp;2.4 Web缓存器</h3><p>&emsp;&emsp;<strong>Web缓存器</strong>也叫<strong>代理服务器</strong>，它在某些情况下可以代替<code>HTTP</code>服务器满足客户的需求。<code>Web</code>缓存器有自己的存储空间，并保存有最近被请求资源的副本。它的作用故名思意，就是提供缓存机制的。若部署了Web缓存器，则可以配置浏览器，使得浏览器的<code>HTTP</code>请求首先发送至<code>Web</code>缓存器，下面我们通过一个例子来讲解<code>Web</code>缓存器的机制。</p>
+<p>&emsp;&emsp;假设我现在要请求<a href="HTTP://www.tewuyiang.cn" target="_blank" rel="noopener">www.tewuyiang.cn</a>这个服务器上的<code>prop3.png</code>这张图片，结果将发生以下情况：</p>
+<ol>
+<li><code>HTTP</code>客户端创建一个到<code>Web</code>缓存器的<code>TCP</code>连接，并向<code>Web</code>缓存器发送一个请求报文；</li>
+<li><code>Web</code>缓存器接收到请求报文，查看自己的本地是否包含被请求资源的副本，若包含，则由<code>Web</code>缓存器创建响应报文，并将此副本通过响应报文返回给<code>HTTP</code>客户端；</li>
+<li>若<code>Web</code>缓存器中不包含此资源的副本，则<code>Web</code>缓存器将向<code>HTTP</code>服务器（这里指的就是<a href="HTTP://www.tewuyiang.cn" target="_blank" rel="noopener">www.tewuyiang.cn</a>）发起一个<code>TCP</code>连接，并向服务器请求客户端需要的资源；</li>
+<li>服务器创建响应报文，将请求的资源响应给缓存器，缓存器接收到响应报文，解析响应报文携带的资源，并复制一份副本存储在本地，然后重新创建一份响应报文，并将副本封装进其中，发送给最初请求资源的客户端；</li>
+</ol>
+<p>&emsp;&emsp;通过上面的步骤我们可以看到，<code>Web</code>缓存器在这个过程中，既充当服务器的角色，又充当客户端的角色。而部署了<code>Web</code>缓存器后，将大大减少服务器响应资源的时间。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200229002758921-446821065.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h3 id="emsp-2-5-条件GET方法"><a href="#emsp-2-5-条件GET方法" class="headerlink" title="&emsp;2.5 条件GET方法"></a>&emsp;2.5 条件GET方法</h3><p>&emsp;&emsp;介绍完上面的<code>Web</code>缓存器后，很多人可能会有一个疑问：怎么能够保证Web缓存器上的资源是最新的呢，若服务器上的资源被更新，而我们请求获得的却是缓存器上没有被改变的旧资源怎么办？<code>HTTP</code>自然是有办法解决这个问题，这时候就要用到我们在讲解响应报文时跳过的首部行Last-Modified了，而这种机制叫做<strong>条件GET</strong>。</p>
+<p>&emsp;&emsp;<code>Last-Modified</code>首部行记录的是<strong>当前被请求的资源，在服务器上最后被修改的时间</strong>。当我们请求一个<code>Web</code>缓存器上没有的资源时，<code>Web</code>缓存器向<code>HTTP</code>服务器转发该请求，而服务器响应缓存器，同时在响应报文中包含<code>Last-Modified</code>首部行。<code>Web</code>缓存器在存储资源的副本时，同时也将<code>Last-Modified</code>的值存了下来。当下一次有客户端请求此资源时，<code>Web</code>缓存器会发送一个条件<code>GET</code>请求到服务器，请求中包含这个时间值，且此时的命名为<code>Last-Modified-Since</code>。服务器接收到这个时间值后，将它与服务器本地记录的这个资源的最后修改时间进行比较，若两者相等，表示上次请求到这次请求之间，这个资源并未更新，服务器将告知<code>Web</code>缓存可以直接使用它存储的副本；若两者不相同，则服务器会将最新的资源，以及新的<code>Last-Modified</code>发送至<code>Web</code>缓存器，<code>Web</code>缓存器更新本地的副本，并响应给客户端。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;上面的内容对<code>HTTP</code>协议以及它的一些机制进行了一个大致的介绍，相信看完之后，能够让你对<code>HTTP</code>有一个大致的了解。当然<code>HTTP</code>的内容肯定不止这些，只是限于篇幅，以及我的知识储备，这篇博客就先写上这些吧。日后有时间，再写一写<code>HTTP</code>的其他部分，例如<code>cookie</code>和<code>session</code>。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p>《计算机网络——自顶向下方法（原书第七版本）》</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最終更新：<time datetime="2020-02-28T16:40:51.754Z" itemprop="dateUpdated">2020-02-29 00:40:51</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/计算机网络/">计算机网络</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Http协议详解/&title=《计算机网络——HTTP协议详解》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Http协议详解/&title=《计算机网络——HTTP协议详解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/Http协议详解/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——HTTP协议详解》 — 博客主页&url=https://tewuyiang.github.io/Http协议详解/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/Http协议详解/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/HashMap源码解读——逐句分析resize方法的实现/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">HashMap源码解读——逐句分析resize方法的实现</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>このブログの内容物は<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ja">クリエイティブ・コモンズ 表示 - 非営利 - 継承 4.0 国際ライセンスの下に提供されています</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/Http协议详解/&title=《计算机网络——HTTP协议详解》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/Http协议详解/&title=《计算机网络——HTTP协议详解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/Http协议详解/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——HTTP协议详解》 — 博客主页&url=https://tewuyiang.github.io/Http协议详解/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/Http协议详解/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/Http协议详解/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
