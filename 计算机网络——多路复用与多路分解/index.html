@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>计算机网络——多路复用与多路分解 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="计算机网络">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;最近在看《计算机网络——自顶向下方法》这本书，读了一部分之后发现，这真是一本非常不错的计算机网络入门书籍，想要学习计算机网络的人可以去买来看看。今天刚读到运输层这一章，开头详细讲解了运输层的多路复用与多路分解，我觉得颇有收获，所以写篇博客分享一下这一部分内容。   二、解析&amp;emsp;2.1 应用层、运输层以及网络层的关系&amp;emsp;&amp;emsp;想要解析多路复用与多">
+<meta name="keywords" content="计算机网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络——多路复用与多路分解">
+<meta property="og:url" content="https://tewuyiang.github.io/计算机网络——多路复用与多路分解/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近在看《计算机网络——自顶向下方法》这本书，读了一部分之后发现，这真是一本非常不错的计算机网络入门书籍，想要学习计算机网络的人可以去买来看看。今天刚读到运输层这一章，开头详细讲解了运输层的多路复用与多路分解，我觉得颇有收获，所以写篇博客分享一下这一部分内容。   二、解析&amp;emsp;2.1 应用层、运输层以及网络层的关系&amp;emsp;&amp;emsp;想要解析多路复用与多">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002210438-716245259.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002223318-1678849858.png">
+<meta property="og:updated_time" content="2020-03-03T16:25:38.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机网络——多路复用与多路分解">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在看《计算机网络——自顶向下方法》这本书，读了一部分之后发现，这真是一本非常不错的计算机网络入门书籍，想要学习计算机网络的人可以去买来看看。今天刚读到运输层这一章，开头详细讲解了运输层的多路复用与多路分解，我觉得颇有收获，所以写篇博客分享一下这一部分内容。   二、解析&amp;emsp;2.1 应用层、运输层以及网络层的关系&amp;emsp;&amp;emsp;想要解析多路复用与多">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002210438-716245259.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">计算机网络——多路复用与多路分解</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">计算机网络——多路复用与多路分解</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-03T13:49:22.000Z" itemprop="datePublished" class="page-time">
+  2020-03-03
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、解析"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、解析</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-应用层、运输层以及网络层的关系"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 应用层、运输层以及网络层的关系</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-什么是多路复用与多路分解"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 什么是多路复用与多路分解</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-无连接的多路分解与多路复用"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 无连接的多路分解与多路复用</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-面向连接的多路复用与多路分解"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 面向连接的多路复用与多路分解</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-计算机网络——多路复用与多路分解"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">计算机网络——多路复用与多路分解</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-03 21:49:22" datetime="2020-03-03T13:49:22.000Z"  itemprop="datePublished">2020-03-03</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;最近在看《计算机网络——自顶向下方法》这本书，读了一部分之后发现，这真是一本非常不错的计算机网络入门书籍，想要学习计算机网络的人可以去买来看看。今天刚读到运输层这一章，开头详细讲解了运输层的<strong>多路复用</strong>与<strong>多路分解</strong>，我觉得颇有收获，所以写篇博客分享一下这一部分内容。</p>
+<br>
+
+<h2 id="二、解析"><a href="#二、解析" class="headerlink" title="二、解析"></a>二、解析</h2><h3 id="emsp-2-1-应用层、运输层以及网络层的关系"><a href="#emsp-2-1-应用层、运输层以及网络层的关系" class="headerlink" title="&emsp;2.1 应用层、运输层以及网络层的关系"></a>&emsp;2.1 应用层、运输层以及网络层的关系</h3><p>&emsp;&emsp;想要解析<strong>多路复用</strong>与<strong>多路分解</strong>，首先得大致了解一下计算机五层结构中，应用层、运输层与网络层的关系。</p>
+<p>&emsp;&emsp;<strong>网络层</strong>是五层结构中的第三层，它的作用就是在网络中提供<strong>端到端</strong>（即主机之间）的逻辑通信；而<strong>运输层</strong>的是五层结构中的第四层，它的作用是提供<strong>进程之间</strong>的通信。<strong>应用层</strong>则是最顶层，作用是为用户提供与网络打交道的接口。</p>
+<p>&emsp;&emsp;应用层与运输层之间通过<strong>套接字</strong>传递数据，套接字是运输层与应用层的一个中间媒介，位于两层之间。运输层接收到数据后，将它交付到正确的套接字中，应用层进程从的相应的套接字中获取数据；反之应用层将数据交付到套接字，运输层从套接字中收集数据。而网络层接收其他主机发送的数据，去除首部信息后交给运输层，由运输层定向到套接字；反之运输层也将从套接字中收集的数据封装后，交给网络层向下传递。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002210438-716245259.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h3 id="emsp-2-2-什么是多路复用与多路分解"><a href="#emsp-2-2-什么是多路复用与多路分解" class="headerlink" title="&emsp;2.2 什么是多路复用与多路分解"></a>&emsp;2.2 什么是多路复用与多路分解</h3><p>&emsp;&emsp;这里通过一个类比来理解这两个概念：假设有两个家庭<code>A</code>和<code>B</code>，各有<code>10</code>名家庭成员。假设这两个家庭中的每一个成员，在每个星期都要给另一个家庭的<code>10</code>成员各写一封信，所以<code>A</code>家庭每个星期都要有<code>100</code>封信送到<code>B</code>家庭，<code>B</code>家庭亦是如此。A家庭和B家庭各选出了一个负责人来处理这件事，假设<code>A</code>家庭的负责人是李明，而<code>B</code>家庭的负责人是韩梅梅。这两个负责人每个星期都需要干两件事情：</p>
+<ol>
+<li>收集每个家庭成员写的信，并将它交给邮差，由邮差将信交到另一个家庭中；</li>
+<li>邮差将信寄到家来时，负责人统一接收，并根据信上的收件人姓名，将信交给指定的家庭成员；</li>
+</ol>
+<p>&emsp;&emsp;多路复用的过程就好比负责人的要办事情1，而多路分解就好比事情2。下面来看这两个名称的解释：</p>
+<ul>
+<li><strong>多路复用</strong>：在数据的发送端，传输层收集各个套接字中需要发送的数据，将它们封装上首部信息后（之后用于分解），交给网络层；</li>
+<li><strong>多路分解</strong>：在数据的接收端，传输层接收到网络层的报文后，将它交付到正确的套接字上；</li>
+</ul>
+<p>&emsp;&emsp;家庭成员就好比套接字，而这两个负责人就好比主机中的运输层，邮差可以理解为网络层。负责人将寄来的信分发给家庭成员的过程，类似于运输层将数据报分发给指定的套接字；而邮差从一个家庭送信到另一个家庭，也可以类比为网络层中主机之间的通信。</p>
+<p>&emsp;&emsp;那这两个过程具体是如何工作的呢？每个进程可以有多个套接字，运输层如何知道要将数据交付给哪一个套接字呢？这里我们需要明确复用/分解的要求：</p>
+<ol>
+<li>每个套接字都有唯一标识；</li>
+<li>每一个传递到运输层的报文段，都包含一些特殊字段，来指明它需要交付到的套接字；</li>
+</ol>
+<p>&emsp;&emsp;对于每一个套接字，都能被分配一个的端口号。所以，上述要求<code>2</code>中所说的特殊字段就是<strong>源端口号字段</strong>和<strong>目的端口号字段</strong>（对于<code>TCP</code>和<code>UDP</code>，这个还有一些其他特殊字段，将在后面讲解）。所以我们知道运输层如何实现分解服务了：<strong>当一个报文段到达运输层时，运输层检测报文段中的端口号，根据端口号，将其定向到指定的套接字中</strong>。然后数据通过套接字即可进入套接字对应的进程。</p>
+<br>
+
+<h3 id="emsp-2-3-无连接的多路分解与多路复用"><a href="#emsp-2-3-无连接的多路分解与多路复用" class="headerlink" title="&emsp;2.3 无连接的多路分解与多路复用"></a>&emsp;2.3 无连接的多路分解与多路复用</h3><p>&emsp;&emsp;上面只是讲解了一下这两个概念的一般形式，但是在具体的实现中要有所区别，不同协议所使用的套接字也有所区别，下面我们来看看<code>UDP</code>协议中的多路分解与多路复用。</p>
+<p>&emsp;&emsp;我们知道，<code>UDP</code>是一个<strong>面向无连接，不可靠</strong>的运输层协议，它尽最大努力传输数据，但是不保证数据是否到达，或者是否按顺序到达，它要做的仅仅是将数据发出，至于发出后如何，它不会在意。</p>
+<p>&emsp;&emsp;当进程需要发送<code>UDP</code>数据报时，首先要创建一个<strong>UDP套接字</strong>，然后应用层通过这个<code>UDP</code>套接字将数据传递到运输层，运输层为数据加上源<code>IP</code>，源端口号，目的<code>IP</code>以及目的端口号，封装成数据报后交给网络层。由于<code>UD</code>P协议仅仅只是将数据发出，所以对于<code>UDP</code>报文来说，最重要的就是<strong>目的地址</strong>的所在。可能正是因为这个原因，一个<code>UDP</code>套接字的标识就是<strong>目的IP+目的端口号</strong>。因此对于多个不同的<code>UDP</code>数据报，只要它们的目的<code>IP</code>+端口号相同，尽管源地址不同，也会在目的主机中被定向到同一个<code>UDP</code>套接字中，被同一个进程所接收。</p>
+<p>&emsp;&emsp;这里可能就会有些疑问了，既然这样，那<code>UDP</code>报文为什么需要封装源<code>IP</code>+源端口号呢？这是因为<code>UDP</code>是无连接的，当接收到一个<code>UDP</code>报文时，可能想要回送一个报文，这时候不知道源在何处将无法实现。所以当需要向源主机回复报文时，只需提取<code>UDP</code>报文中的源<code>IP</code>和源端口号，然后将它们作为目的<code>IP</code>+目的端口号即可实现。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002223318-1678849858.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h3 id="emsp-2-4-面向连接的多路复用与多路分解"><a href="#emsp-2-4-面向连接的多路复用与多路分解" class="headerlink" title="&emsp;2.4 面向连接的多路复用与多路分解"></a>&emsp;2.4 面向连接的多路复用与多路分解</h3><p>&emsp;&emsp;既然有无连接的实现，自然就有连接的实现。运输层乃至整个计算机网络最著名的协议——<code>TCP</code>协议，就是一个面向连接的协议。<code>TCP</code>是一个<strong>面向连接，可靠</strong>的运输层协议。既然面向连接，那它就需要关注两个方面：<strong>源地址</strong>和<strong>目的地址</strong>，因为<code>TCP</code>的传输，需要两边协作完成。正因为<code>TCP</code>的特性，导致<code>TCP</code>的套接字和<code>UDP</code>也有所区别。TCP套接字的标识是一个四元组，即<strong>源IP+源端口+目的IP+目的端口</strong>（<code>UDP</code>是目的<code>IP</code>+目的端口）。我们通过一个实例来讲解<code>TCP</code>的多路复用/分解过程。</p>
+<p>&emsp;&emsp;大部分人使用最多的应用层协议应该就是<code>HTTP</code>协议，而它就是基于<code>TCP</code>协议实现的，当我们在浏览器中请求一个页面时，将经历以下过程：</p>
+<ol>
+<li><code>Web</code>服务器监听<code>80</code>端口，等待客户端的连接；</li>
+<li>用户在浏览器输入一个<code>URL</code>，回车后，浏览器进程创建一个套接字，此套接字由服务器<code>IP</code>，服务器<code>80</code>端口，本地<code>IP</code>，本地进程端口，四部分标识；</li>
+<li>浏览器进程将数据通过此套接字从应用层传入运输层，运输层根据套接字信息，对数据封装上首部后（包括以上四部分），交给网络层传输传输到<code>Web</code>服务器；</li>
+<li><code>Web</code>服务器的接收到此数据报后，检测到数据报请求的是端口<code>80</code>，于是检测<code>80</code>端口正在运行，且允许连接，则创建一个新的套接字，此套接字由服务器<code>IP</code>，服务器<code>80</code>端口，源<code>IP</code>，源端口，这四部分标识；</li>
+<li>此后到达的Web服务器的数据报，若以上<strong>四部分完全相等</strong>，则将进入此套接字中；</li>
+</ol>
+<p>&emsp;&emsp;既然<code>TCP</code>套接字是由<strong>源IP+源端口+目的IP+目的端口</strong>四部分标识，不难想到，我们无法在同一台主机上，依靠同一个端口，向服务器的某个一个端口建立两个<code>TCP</code>连接，因为这样将无法区分两个连接。以下通过<code>Java</code>进行测试：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// 建立第一个TCP连接，结果正常</span></span><br><span class="line">    Socket socket1 = <span class="keyword">new</span> Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>, <span class="keyword">null</span>, <span class="number">8888</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 建立第二个连接，与上一个连接的目的IP，目的端口，以及本地端口均相同</span></span><br><span class="line">    <span class="comment">// 结果抛出异常：</span></span><br><span class="line">    <span class="comment">//  java.net.BindException: Address already in use: JVM_Bind</span></span><br><span class="line">    Socket socket2 = <span class="keyword">new</span> Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>, <span class="keyword">null</span>, <span class="number">8888</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;以上代码执行时抛出异常，提示地址已经被使用，但是修改第二个<code>socket</code>对象的本地端口后，异常消失，验证了上面的结论。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;以上对运输层的多路复用与多路分解进行了一个大致的介绍，因为知识水平有限，所以无法更加深入的讲解，若存在不足或者错误之处，望指正。同时希望这篇博客对看到的人有所帮助。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p>《计算机网络——自顶向下方法（原书第七版）》</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-03T16:25:38.000Z" itemprop="dateUpdated">2020-03-04 00:25:38</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/计算机网络/">计算机网络</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&title=《计算机网络——多路复用与多路分解》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&title=《计算机网络——多路复用与多路分解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——多路复用与多路分解》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/Http协议详解/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">计算机网络——HTTP协议详解</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&title=《计算机网络——多路复用与多路分解》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&title=《计算机网络——多路复用与多路分解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——多路复用与多路分解》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/计算机网络——多路复用与多路分解/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
