@@ -31,7 +31,7 @@
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002210438-716245259.png">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200304002223318-1678849858.png">
-<meta property="og:updated_time" content="2020-03-03T16:25:38.000Z">
+<meta property="og:updated_time" content="2020-03-04T15:36:22.362Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="计算机网络——多路复用与多路分解">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在看《计算机网络——自顶向下方法》这本书，读了一部分之后发现，这真是一本非常不错的计算机网络入门书籍，想要学习计算机网络的人可以去买来看看。今天刚读到运输层这一章，开头详细讲解了运输层的多路复用与多路分解，我觉得颇有收获，所以写篇博客分享一下这一部分内容。   二、解析&amp;emsp;2.1 应用层、运输层以及网络层的关系&amp;emsp;&amp;emsp;想要解析多路复用与多">
@@ -134,7 +134,7 @@
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
                 <i class="icon icon-lg icon-chevron-left"></i>
             </a>
-            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
             <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
                 <i class="icon icon-lg icon-search"></i>
             </a>
@@ -236,10 +236,10 @@
 <p>&emsp;&emsp;对于每一个套接字，都能被分配一个的端口号。所以，上述要求<code>2</code>中所说的特殊字段就是<strong>源端口号字段</strong>和<strong>目的端口号字段</strong>（对于<code>TCP</code>和<code>UDP</code>，这个还有一些其他特殊字段，将在后面讲解）。所以我们知道运输层如何实现分解服务了：<strong>当一个报文段到达运输层时，运输层检测报文段中的端口号，根据端口号，将其定向到指定的套接字中</strong>。然后数据通过套接字即可进入套接字对应的进程。</p>
 <br>
 
-<h3 id="emsp-2-3-无连接的多路分解与多路复用"><a href="#emsp-2-3-无连接的多路分解与多路复用" class="headerlink" title="&emsp;2.3 无连接的多路分解与多路复用"></a>&emsp;2.3 无连接的多路分解与多路复用</h3><p>&emsp;&emsp;上面只是讲解了一下这两个概念的一般形式，但是在具体的实现中要有所区别，不同协议所使用的套接字也有所区别，下面我们来看看<code>UDP</code>协议中的多路分解与多路复用。</p>
+<h3 id="emsp-2-3-无连接的多路分解与多路复用"><a href="#emsp-2-3-无连接的多路分解与多路复用" class="headerlink" title="&emsp;2.3 无连接的多路分解与多路复用"></a>&emsp;2.3 无连接的多路分解与多路复用</h3><p>&emsp;&emsp;上面只是讲解了一下这两个概念的一般形式，但是在具体的实现中要稍微复杂一些，不同协议所使用的套接字也有所区别，下面我们来看看<code>UDP</code>协议中的多路分解与多路复用。</p>
 <p>&emsp;&emsp;我们知道，<code>UDP</code>是一个<strong>面向无连接，不可靠</strong>的运输层协议，它尽最大努力传输数据，但是不保证数据是否到达，或者是否按顺序到达，它要做的仅仅是将数据发出，至于发出后如何，它不会在意。</p>
-<p>&emsp;&emsp;当进程需要发送<code>UDP</code>数据报时，首先要创建一个<strong>UDP套接字</strong>，然后应用层通过这个<code>UDP</code>套接字将数据传递到运输层，运输层为数据加上源<code>IP</code>，源端口号，目的<code>IP</code>以及目的端口号，封装成数据报后交给网络层。由于<code>UD</code>P协议仅仅只是将数据发出，所以对于<code>UDP</code>报文来说，最重要的就是<strong>目的地址</strong>的所在。可能正是因为这个原因，一个<code>UDP</code>套接字的标识就是<strong>目的IP+目的端口号</strong>。因此对于多个不同的<code>UDP</code>数据报，只要它们的目的<code>IP</code>+端口号相同，尽管源地址不同，也会在目的主机中被定向到同一个<code>UDP</code>套接字中，被同一个进程所接收。</p>
-<p>&emsp;&emsp;这里可能就会有些疑问了，既然这样，那<code>UDP</code>报文为什么需要封装源<code>IP</code>+源端口号呢？这是因为<code>UDP</code>是无连接的，当接收到一个<code>UDP</code>报文时，可能想要回送一个报文，这时候不知道源在何处将无法实现。所以当需要向源主机回复报文时，只需提取<code>UDP</code>报文中的源<code>IP</code>和源端口号，然后将它们作为目的<code>IP</code>+目的端口号即可实现。</p>
+<p>&emsp;&emsp;当进程需要发送<code>UDP</code>数据报时，首先要创建一个<strong>UDP套接字</strong>，然后应用层通过这个<code>UDP</code>套接字将数据传递到运输层，运输层为数据加上源端口号以及目的端口号，封装成数据报后交给网络层，网络层再为数据报封装上源IP以及目的IP。由于<code>UDP</code>协议仅仅只是将数据发出，所以对于<code>UDP</code>报文来说，最重要的就是<strong>目的地址</strong>的所在。可能正是因为这个原因，一个<code>UDP</code>套接字的标识就是<strong>目的IP+目的端口号</strong>。因此对于多个不同的<code>UDP</code>数据报，只要它们的目的<code>IP</code>+端口号相同，就算源地址不同，也会在目的主机中被定向到同一个<code>UDP</code>套接字中，被同一个进程所接收。目的IP决定了数据报将要发送到哪台主机，而目的端口号为运输层的的分解提供了标识。</p>
+<p>&emsp;&emsp;这里可能就会有些疑问了，既然这样，那<code>UDP</code>报文为什么需要包含源<code>IP</code>+源端口号呢（<code>IP</code>在网络层被封装）？这是因为<code>UDP</code>是无连接的，当接收到一个<code>UDP</code>报文时，可能想要回送一个报文，这时候不知道源在何处将无法实现。所以当需要向源主机回复报文时，只需提取<code>UDP</code>报文中的源<code>IP</code>和源端口号，然后将它们作为目的<code>IP</code>+目的端口号即可实现。</p>
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
@@ -250,14 +250,14 @@
 
 <br>
 
-<h3 id="emsp-2-4-面向连接的多路复用与多路分解"><a href="#emsp-2-4-面向连接的多路复用与多路分解" class="headerlink" title="&emsp;2.4 面向连接的多路复用与多路分解"></a>&emsp;2.4 面向连接的多路复用与多路分解</h3><p>&emsp;&emsp;既然有无连接的实现，自然就有连接的实现。运输层乃至整个计算机网络最著名的协议——<code>TCP</code>协议，就是一个面向连接的协议。<code>TCP</code>是一个<strong>面向连接，可靠</strong>的运输层协议。既然面向连接，那它就需要关注两个方面：<strong>源地址</strong>和<strong>目的地址</strong>，因为<code>TCP</code>的传输，需要两边协作完成。正因为<code>TCP</code>的特性，导致<code>TCP</code>的套接字和<code>UDP</code>也有所区别。TCP套接字的标识是一个四元组，即<strong>源IP+源端口+目的IP+目的端口</strong>（<code>UDP</code>是目的<code>IP</code>+目的端口）。我们通过一个实例来讲解<code>TCP</code>的多路复用/分解过程。</p>
+<h3 id="emsp-2-4-面向连接的多路复用与多路分解"><a href="#emsp-2-4-面向连接的多路复用与多路分解" class="headerlink" title="&emsp;2.4 面向连接的多路复用与多路分解"></a>&emsp;2.4 面向连接的多路复用与多路分解</h3><p>&emsp;&emsp;既然有无连接的实现，自然就有连接的实现。运输层乃至整个计算机网络最著名的协议——<code>TCP</code>协议，就是一个面向连接的协议。<code>TCP</code>是一个<strong>面向连接，可靠</strong>的运输层协议。既然面向连接，那它就需要关注两个方面：<strong>源地址</strong>和<strong>目的地址</strong>，因为<code>TCP</code>的传输，需要两边协作完成。正因为<code>TCP</code>的特性，导致<code>TCP</code>的套接字和<code>UDP</code>也有所区别。<code>TCP</code>套接字的标识是一个四元组，即<strong>源IP+源端口+目的IP+目的端口</strong>（<code>UDP</code>是目的<code>IP</code>+目的端口）。我们通过一个实例来讲解<code>TCP</code>的多路复用/分解过程。</p>
 <p>&emsp;&emsp;大部分人使用最多的应用层协议应该就是<code>HTTP</code>协议，而它就是基于<code>TCP</code>协议实现的，当我们在浏览器中请求一个页面时，将经历以下过程：</p>
 <ol>
 <li><code>Web</code>服务器监听<code>80</code>端口，等待客户端的连接；</li>
 <li>用户在浏览器输入一个<code>URL</code>，回车后，浏览器进程创建一个套接字，此套接字由服务器<code>IP</code>，服务器<code>80</code>端口，本地<code>IP</code>，本地进程端口，四部分标识；</li>
-<li>浏览器进程将数据通过此套接字从应用层传入运输层，运输层根据套接字信息，对数据封装上首部后（包括以上四部分），交给网络层传输传输到<code>Web</code>服务器；</li>
+<li>浏览器进程将数据通过此套接字从应用层传入运输层，运输层为<code>TCP</code>报文加上首部（包括源端口和目的端口）后，交给网络层，网络层为其加上网络层首部（包括源<code>IP</code>和目的<code>IP</code>）传输传输到<code>Web</code>服务器；</li>
 <li><code>Web</code>服务器的接收到此数据报后，检测到数据报请求的是端口<code>80</code>，于是检测<code>80</code>端口正在运行，且允许连接，则创建一个新的套接字，此套接字由服务器<code>IP</code>，服务器<code>80</code>端口，源<code>IP</code>，源端口，这四部分标识；</li>
-<li>此后到达的Web服务器的数据报，若以上<strong>四部分完全相等</strong>，则将进入此套接字中；</li>
+<li>此后到达的<code>Web</code>服务器的数据报，若以上<strong>四部分完全相等</strong>，则将进入此套接字中；</li>
 </ol>
 <p>&emsp;&emsp;既然<code>TCP</code>套接字是由<strong>源IP+源端口+目的IP+目的端口</strong>四部分标识，不难想到，我们无法在同一台主机上，依靠同一个端口，向服务器的某个一个端口建立两个<code>TCP</code>连接，因为这样将无法区分两个连接。以下通过<code>Java</code>进行测试：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// 建立第一个TCP连接，结果正常</span></span><br><span class="line">    Socket socket1 = <span class="keyword">new</span> Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>, <span class="keyword">null</span>, <span class="number">8888</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 建立第二个连接，与上一个连接的目的IP，目的端口，以及本地端口均相同</span></span><br><span class="line">    <span class="comment">// 结果抛出异常：</span></span><br><span class="line">    <span class="comment">//  java.net.BindException: Address already in use: JVM_Bind</span></span><br><span class="line">    Socket socket2 = <span class="keyword">new</span> Socket(<span class="string">"www.baidu.com"</span>, <span class="number">80</span>, <span class="keyword">null</span>, <span class="number">8888</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -277,7 +277,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-03-03T16:25:38.000Z" itemprop="dateUpdated">2020-03-04 00:25:38</time>
+    Last updated: <time datetime="2020-03-04T15:36:22.362Z" itemprop="dateUpdated">2020-03-04 23:36:22</time>
 </span><br>
 
 
@@ -359,7 +359,7 @@
 
   
     <div class="waves-block waves-effect next">
-      <a href="/Http协议详解/" id="post-next" class="post-nav-link">
+      <a href="/计算机网络——Http协议详解/" id="post-next" class="post-nav-link">
         <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
         <h4 class="title">计算机网络——HTTP协议详解</h4>
       </a>
@@ -411,7 +411,7 @@
 
         <p>
             
-            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
         </p>
     </div>
     <div class="bottom">
