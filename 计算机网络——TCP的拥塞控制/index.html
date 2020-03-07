@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>计算机网络——TCP的拥塞控制 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="计算机网络">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;这篇博客来讲讲TCP的拥塞控制机制，这是TCP中比较复杂的一个部分，它与TCP的很多内容都有关联，但是这里不可能将这些内容都说一遍，所以以下描述将建立在读者对TCP的机制有一定了解的基础之上。这一部分内容确实有些复杂，我尽量在少涉及TCP其他内容的条件下将它叙述清楚。   二、正文&amp;emsp;2.1 什么是拥塞控制&amp;emsp;&amp;emsp;我们都知道，网络错综复杂，在">
+<meta name="keywords" content="计算机网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络——TCP的拥塞控制">
+<meta property="og:url" content="https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;这篇博客来讲讲TCP的拥塞控制机制，这是TCP中比较复杂的一个部分，它与TCP的很多内容都有关联，但是这里不可能将这些内容都说一遍，所以以下描述将建立在读者对TCP的机制有一定了解的基础之上。这一部分内容确实有些复杂，我尽量在少涉及TCP其他内容的条件下将它叙述清楚。   二、正文&amp;emsp;2.1 什么是拥塞控制&amp;emsp;&amp;emsp;我们都知道，网络错综复杂，在">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200308014148078-546565892.png">
+<meta property="og:updated_time" content="2020-03-07T17:42:18.994Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机网络——TCP的拥塞控制">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;这篇博客来讲讲TCP的拥塞控制机制，这是TCP中比较复杂的一个部分，它与TCP的很多内容都有关联，但是这里不可能将这些内容都说一遍，所以以下描述将建立在读者对TCP的机制有一定了解的基础之上。这一部分内容确实有些复杂，我尽量在少涉及TCP其他内容的条件下将它叙述清楚。   二、正文&amp;emsp;2.1 什么是拥塞控制&amp;emsp;&amp;emsp;我们都知道，网络错综复杂，在">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200308014148078-546565892.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">计算机网络——TCP的拥塞控制</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">计算机网络——TCP的拥塞控制</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-07T12:04:23.000Z" itemprop="datePublished" class="page-time">
+  2020-03-07
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是拥塞控制"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是拥塞控制</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-拥塞控制的方法"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 拥塞控制的方法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-TCP的拥塞控制方法"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 TCP的拥塞控制方法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-慢启动"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 慢启动</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-拥塞避免"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 拥塞避免</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-6-快速恢复"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.6 快速恢复</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-7-三种模式相互转换状态图"><span class="post-toc-number">2.7.</span> <span class="post-toc-text"> 2.7 三种模式相互转换状态图</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-计算机网络——TCP的拥塞控制"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">计算机网络——TCP的拥塞控制</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-07 20:04:23" datetime="2020-03-07T12:04:23.000Z"  itemprop="datePublished">2020-03-07</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;这篇博客来讲讲<code>TCP</code>的拥塞控制机制，这是<code>TCP</code>中比较复杂的一个部分，它与<code>TCP</code>的很多内容都有关联，但是这里不可能将这些内容都说一遍，所以以下描述将建立在读者对<code>TCP</code>的机制有一定了解的基础之上。这一部分内容确实有些复杂，我尽量在少涉及<code>TCP</code>其他内容的条件下将它叙述清楚。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-什么是拥塞控制"><a href="#emsp-2-1-什么是拥塞控制" class="headerlink" title="&emsp;2.1 什么是拥塞控制"></a>&emsp;2.1 什么是拥塞控制</h3><p>&emsp;&emsp;我们都知道，网络错综复杂，在这个复杂的网络中，很少有两台主机是直接相连。尽管如此，我们还是可以通过网络与其他主机通信，这是为什么？因为我们发送到网络中的数据，当达到网络中的一个节点时（假设是路由器），它会根据数据包含的地址，帮我们将数据转发到离目的地更近的路由器，或直接转发到目的地。但是，这些路由器不是直接就可以转发的，它们需要先将接收到的数据放入自己的内存（可能还要做一些处理），再从中取出进行转发。</p>
+<p>&emsp;&emsp;这里就面临一个问题：<strong>路由器的内存是有限的，若同一时间到达某个路由器的数据太多，这个路由器将无法接收所有的数据，只能将一部分丢弃；或者同一台路由器数据太多，后面到达的数据将要等待较长的时间才会被转发</strong>。网络中的数据太多，导致某个路由器处理不过来或处理地太慢，这就是<strong>网络拥塞</strong>。若是对于<code>TCP</code>这种有重传机制的传输协议，当发生数据丢失时，重传数据将延长数据到达的时间；同时，高频率的重传，也将导致网络的拥塞得不到缓解。<strong>拥塞控制，就是在网络中发生拥塞时，减少向网络中发送数据的速度，防止造成恶性循环；同时在网络空闲时，提高发送数据的速度，最大限度地利用网络资源</strong>。说的简单点，就和堵车差不多，路就这么宽，来的车多了，自然过的就慢，所以在必要的时候要限号。</p>
+<br>
+
+<h3 id="emsp-2-2-拥塞控制的方法"><a href="#emsp-2-2-拥塞控制的方法" class="headerlink" title="&emsp;2.2 拥塞控制的方法"></a>&emsp;2.2 拥塞控制的方法</h3><p>&emsp;&emsp;在理论中，拥塞控制有两种实现方式：</p>
+<ul>
+<li><strong>端到端拥塞控制</strong>：在这种拥塞控制方法中，由发送数据的端系统自己来判断是否拥塞，然后调整传输速率。比如说发送的数据已经超时却还没有接收到确认报文，数据往返时延过高，接收到对同一个数据段的重复确认……都可以认为是网络拥塞的现象；若发送端检测到这种现象，就应该降低发送数据的速率，若没有，则可以慢慢提高速率；</li>
+<li><strong>网络辅助的拥塞控制</strong>：由网络中的路由器来告诉发送方，网络的拥塞情况。一般有两种方式：（1）路由器直接向发送端发送报文，告知网络拥塞情况；（2）路由器更改数据段中的某个标志，来提示网络中的拥塞情况，然后数据将这个标志携带到目的主机，再由目的主机根据这个标志，向发送端发送报文，告知拥塞情况（被包含在确认报文中）；</li>
+</ul>
+<br>
+
+<h3 id="emsp-2-3-TCP的拥塞控制方法"><a href="#emsp-2-3-TCP的拥塞控制方法" class="headerlink" title="&emsp;2.3 TCP的拥塞控制方法"></a>&emsp;2.3 TCP的拥塞控制方法</h3><p>&emsp;&emsp;因为网络层不会提供拥塞的反馈信息，所以<strong>TCP协议采用的是第一种方式——自己判断网络的拥塞情况</strong>。当<code>TCP</code>检测到网络拥塞，则降低数据的发送速率，否则增加数据的发送速率。这里就将面临三个问题：</p>
+<ol>
+<li><code>TCP</code>如何限制数据的发送速率；</li>
+<li><code>TCP</code>如何检测网络中是否拥塞；</li>
+<li><code>TCP</code>采用什么算法来调整速率（什么时候调整，调整多少）；</li>
+</ol>
+<p>&emsp;&emsp;首先来回答第一个问题。了解<code>TCP</code>的应该知道，<code>TCP</code>不是发送一个数据段，接收到确认后再发送另一个数据段，它采用的是<strong>流水线</strong>的方式。<code>TCP</code>的每一个数据段都有一个序号，而<code>TCP</code>维护一个<strong>发送窗口</strong>来发送是数据，这个窗口就是一个<strong>区间</strong>。所有序号位于这个窗口内的数据段都会被一次性发送，而不需要等待之前发送的数据段被确认。而每当最早发送出去的数据段被确认，窗口就会向前移动，直到移动到第一个没有被确认的序号，这时候又会有新的数据段序号被包含在窗口中，然后被发送出去。所以限制数据发送速率最好的方式就是<strong>限制窗口的大小</strong>。在发送方的<code>TCP</code>程序会跟踪和维护一个叫做<strong>拥塞窗口</strong>的变量，用来进行拥塞控制。拥塞窗口被称为<strong><code>cwnd</code></strong>。在<code>TCP</code>发送端，所有被发送但是还没收到确认的数据段必须落在这个窗口中，所有，当网络拥塞时，TCP程序将减小<code>cwnd</code>，而网络通畅时，增大<code>cwnd</code>，以此来控制数据发送的速率。</p>
+<p>&emsp;&emsp;接着来回答第二个问题。<code>TCP</code>程序将通过数据发送的一些现象来推测网络是否拥塞，比如：</p>
+<ul>
+<li><p>若发送一条数据段后，成功接收到了接收方的确认报文，则可以认为网络没有拥塞；</p>
+</li>
+<li><p>若发送出一条数据段后，在规定时间内没有收到确认报文（丢失或时延太大），则可以认为网络出现了拥塞；</p>
+</li>
+<li><p>若连续收到接收方对同一条报文的三次确认，则可以推测那条报文丢失，即发生了拥塞；</p>
+</li>
+</ul>
+<p>&emsp;&emsp;上面的第三种情况，与<code>TCP</code>的<strong>快速重传</strong>机制有关，我这里不详细说明，只是大致介绍一下。TCP无法保证数据能够按顺序到达接收端，所以，可能出现序号靠后的数据报反倒先到达的情况。而<code>TCP</code>接收方并不是接收到哪一条报文，就向发送方发送哪条报文的确认，它是通过发送当前应该接收到的序号最小的报文进行确认。举个例子：</p>
+<ol>
+<li>发送方同时发送了<code>1，2，3，4，5</code>这五个序号的报文，假设接收方接收到序号<code>1</code>的报文，于是将向发送方发送一个确认号为<code>2</code>的确认报文（<code>TCP</code>发送方通过确认号来判断接收方接收到的报文），告诉发送方我已经收到<code>2</code>之前的报文了，下一条报文我想要<code>2</code>；</li>
+<li>接收方接收到<code>2</code>号报文后，发送确认号<code>3</code>，告诉发送方我接收到了<code>3</code>之前的所有报文；</li>
+<li>这时候因为网络的不确定性，在<code>3</code>号没有到达前，<code>4</code>号报文先到达了，接收方接收到后，将它放入缓存，并依旧回复确认号<code>3</code>，表示它需要的是3号报文；</li>
+<li>可是，之后到达的却<code>5</code>，于是它将<code>5</code>放入缓存，并依旧回复3；</li>
+<li>直到<code>3</code>迟迟的到来，这时候接收方接收<code>3</code>，同时发现缓存中存在<code>4和5</code>，于是回复发送方确认号<code>6</code>，表示自己已经接收到了<code>6</code>之前的全部报文，下一条需要<code>6</code>；</li>
+</ol>
+<p>&emsp;&emsp;在这里，发送方一共接收到了三条确认号为<code>3</code>的确认报文（确认号为<code>3</code>是对<code>2</code>号报文的确认），第一条正常，后面两条冗余。而所谓的快速重传就是指：<strong>若发送方接收到对同一条报文的三次冗余确认（也就是四次确认），就认为这条报文的下一条已经丢失，于是不管计时器是否超时，都直接重传这条报文的下一条</strong>。上面的例子中，<code>2</code>号报文被冗余确认了两次，还不构成快速重传的条件。而为什么是三次，其实就是概率和时间长短的折中选择。</p>
+<p>&emsp;&emsp;下面回到正题，当快速重传的条件发生，发送方将认为出现了拥塞导致丢包。所有归根到底，<strong>TCP判断拥塞的方式就是检测有没有丢包</strong>。于是我们就可以回答第三个问题了，<code>TCP</code>如何调整发送速率——<strong>在没有丢包时慢慢提高拥塞窗口cwnd的大小，当发生丢包事件时，减少cwnd的大小</strong>。当然，具体的算法要复杂的多，<code>TCP</code>调整拥塞窗口的主要算法有 <strong>慢启动</strong> ， <strong>拥塞避免</strong> 以及 <strong>快速恢复</strong> ，其中前两个是<code>TCP</code>规范要求必须实现的，而第三个则是推荐实现的，<code>TCP</code>根据情况在这三者之间切换。 下面我就来一一介绍。</p>
+<br>
+
+<h3 id="emsp-2-4-慢启动"><a href="#emsp-2-4-慢启动" class="headerlink" title="&emsp;2.4 慢启动"></a>&emsp;2.4 慢启动</h3><p>&emsp;&emsp;在讲解之前，首先得知道一些名词：</p>
+<ul>
+<li><strong>MSS</strong>：最大报文段长度，<code>TCP</code>双方发送的报文段中，包含的数据部分的最大字节数；</li>
+<li><strong>cwnd</strong>：拥塞窗口，<code>TCP</code>发送但还没有得到确认的报文的序号都在这个区间；</li>
+<li><strong>RTT</strong>：往返时间，发送方发送一个报文，到接收这个报文的确认报文所经历的时间；</li>
+<li><strong>ssthresh</strong>：慢启动阈值，慢启动阶段，若<code>cwnd</code>的大小达到这个值，将转换到拥塞避免模式；</li>
+</ul>
+<p>&emsp;&emsp;慢启动是建立<code>TCP</code>连接后，采用的第一个调整发送速率的算法（或叫模式）。在这个阶段，<code>cwnd</code>通常被初始化为<code>1MSS</code>，这个值比较小，在这个时候，网络一般还有足够的富余，<strong>而慢启动的目的就是尽快找到上限</strong>。在慢启动阶段，发送方每接收到一个确认报文，就会将<code>cwnd</code>增加<code>1MSS</code>的大小，于是：</p>
+<ul>
+<li>初始<code>cwnd=1MSS</code>，所以可以发送一个<code>TCP</code>最大报文段，成功确认后，<code>cwnd = 2MSS</code>；</li>
+<li>此时可以发送两个<code>TCP</code>最大报文段，成功接收后，<code>cwnd = 4 MSS</code>；</li>
+<li>此时可以发送四个<code>TCP</code>最大报文段，成功接收后，<code>cwnd = 8 MSS</code>……</li>
+</ul>
+<p>&emsp;&emsp;<strong>由于TCP是一次性将窗口内的所有报文发出，所以所有报文都到达并被确认的时间，近似的等于一个RTT（记住这个结论，后面所述的RTT都是基于这个结论）</strong>。所以在这个阶段，拥塞窗口<code>cwnd</code>的长度将在每个<code>RTT</code>后翻倍，也就是发送速率将以指数级别增长（所以不要被慢启动这个名字误导了）。那这个过程什么时候改变呢，这又分几种情况：</p>
+<ul>
+<li>第一种：若在慢启动的过程中，发生了数据传输超时，则此时<code>TCP</code>将<code>ssthresh</code>的值设置为<code>cwnd / 2</code>，然后将<code>cwnd</code>重新设置为<code>1MSS</code>，重新开始慢启动过程，这个过程可以理解为试探上限；</li>
+<li>第二种：第一步试探出来的上限<code>ssthresh</code>将用在此处。若<code>cwnd</code>的值增加到<code>&gt;= ssthresh</code>时，此时若继续使用慢启动的翻倍增长方式可能有些鲁莽，所以这个时候结束慢启动，改为拥塞避免模式；</li>
+<li>第三种：若发送方接收到了某个报文的三次冗余确认（即触发了快速重传的条件），则进入到快速恢复阶段；同时，<code>ssthresh = cwnd / 2</code>，毕竟发生快速重传也可以认为是发生拥塞导致的丢包，然后<code>cwnd  = ssthresh + 3MSS</code>；</li>
+</ul>
+<p>&emsp;&emsp;以上就是慢启动的过程，下面来介绍拥塞避免。</p>
+<br>
+
+<h3 id="emsp-2-5-拥塞避免"><a href="#emsp-2-5-拥塞避免" class="headerlink" title="&emsp;2.5 拥塞避免"></a>&emsp;2.5 拥塞避免</h3><p>&emsp;&emsp;刚进入这个模式时，<code>cwnd</code>的大小近似的等于上次拥塞时的值的一半（这是由进入这个模式的条件决定的），也就是说当前的<code>cwnd</code>很接近产生拥塞的值。所以，<strong>拥塞避免是一个速率缓慢且线性增长的过程</strong>，在这个模式下，每经历一个<code>RTT</code>（请注意<code>2.4</code>中有关<code>RTT</code>的结论），<code>cwnd</code>的大小增加<code>1MSS</code>，也就是说，假设<code>cwnd</code>包含<code>10</code>个报文的大小，则每接收到一个确认报文，<code>cwnd</code>增加<code>1/10 MSS</code>。这个线性增长的过程什么时候结束，分为两种情况：</p>
+<ul>
+<li>第一种：在这个过程中，发生了超时，则表示网络拥塞，这时候，<code>ssthresh</code>被修改为<code>cwnd / 2</code>，然后<code>cwnd</code>被置为<code>1MSS</code>，并进入慢启动阶段；</li>
+<li>第二种：若发送方接收到了某个报文的三次冗余确认（即触发了快速重传的条件），此时也认为发生了拥塞，则，<code>ssthresh</code> 被修改为 <code>cwnd / 2</code>，然后<code>cwnd</code>被置为<code>ssthresh + 3MSS</code>，并进入快速恢复模式；</li>
+</ul>
+<p>&emsp;&emsp;我们可以看到，慢启动和拥塞避免在接收到三个冗余的确认报文时，处理方式是一样的：判断发生了拥塞，并减小<code>ssthresh</code>的大小，但是<code>cwnd</code>的大小却不见得有减小多少，这一点让人疑惑。我个人认为是这样，虽然发送方通过接收三次冗余确认报文，判断可能存在拥塞，但是既然可以收到冗余的确认报文，表示拥塞不会太严重，甚至已经不再拥塞，所以对<code>cwnd</code>的减小不是这么剧烈。</p>
+<br>
+
+<h3 id="emsp-2-6-快速恢复"><a href="#emsp-2-6-快速恢复" class="headerlink" title="&emsp;2.6 快速恢复"></a>&emsp;2.6 快速恢复</h3><p> &emsp;&emsp;快速恢复和上面两种模式不太一样，这种模式在TCP规范中并没有强制要求实现，只是一种推荐实现的模式。在快速恢复阶段，每接收到一个冗余的确认报文，<code>cwnd</code>就增加<code>1MSS</code>，其余不变，而当发生以下两种情况时，将退出快速恢复模式：</p>
+<ul>
+<li>第一种：在快速恢复过程中，计时器超时，这时候，<code>ssthresh</code>被修改为 <code>cwnd / 2</code>，然后<code>cwnd</code>被置为<code>1MSS</code>，并进入慢启动阶段；</li>
+<li>第二种：若发送方接收到一条新的确认报文（不是冗余确认），则<code>cwnd</code>被置为<code>ssthresh</code>，然后进入到拥塞避免模式；</li>
+</ul>
+<p>&emsp;&emsp;这里有一个疑问，进入到此模式的条件就是接收到三次冗余的确认报文，判断报文丢失，那为什么再次接收到冗余确认报文时，<code>cwnd</code>还是要增长呢？我搜遍网上博客，只在一篇博客中找到一种说法，我认为还是有一定道理的：此时再次收到一条冗余的确认报文，表示发送端发出的报文又有一条离开网络到达了接收端（虽然不是接收端当前想要的一条），这说明网络中腾出了一条报文的空间，所以允许发送端再向网络中发送一条报文。但是由于当前序号最小的报文丢失，导致拥塞窗口<code>cwnd</code>无法向前移动，于是只好将<code>cwnd</code>增加<code>1MSS</code>，于是发送端又可以发送一条数据段，提高了网络的利用率。</p>
+<br>
+
+<h3 id="emsp-2-7-三种模式相互转换状态图"><a href="#emsp-2-7-三种模式相互转换状态图" class="headerlink" title="&emsp;2.7 三种模式相互转换状态图"></a>&emsp;2.7 三种模式相互转换状态图</h3><p>&emsp;&emsp;下面给出一张三种模式互相转换的状态图，途中箭头上的是转换的条件，条件有上下两部分，横线上方的是上面事件引起的转换，而下方是转换时发生的操作。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200308014148078-546565892.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;拥塞控制应该是<code>TCP</code>中相对比较复杂的一个部分了，理解起来不是那么容易。在写这篇博客之前，对于上面所说的三种模式，我只知道具体的流程，却有很多地方不清楚为什么要这么做。但是在写这篇博客时，反复阅读书本，找博客阅读的过程让我对慢慢理解了它们的意图。这就是我写博客的理由，通过复述，来加深自己的理解，同时也希望这篇博客对看到的人有所帮助。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《计算机网络——自顶向下方法（原书第七版）》</li>
+<li><a href="https://blog.csdn.net/jeason29/article/details/50427397/" target="_blank" rel="noopener">https://blog.csdn.net/jeason29/article/details/50427397/</a></li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-03-07T17:42:18.994Z" itemprop="dateUpdated">2020-03-08 01:42:18</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/计算机网络/">计算机网络</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&title=《计算机网络——TCP的拥塞控制》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&title=《计算机网络——TCP的拥塞控制》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP的拥塞控制》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/计算机网络——TCP的三次握手与四次挥手/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">计算机网络——TCP的三次握手与四次挥手</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&title=《计算机网络——TCP的拥塞控制》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&title=《计算机网络——TCP的拥塞控制》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP的拥塞控制》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/计算机网络——TCP的拥塞控制/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
