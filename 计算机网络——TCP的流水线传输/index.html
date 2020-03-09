@@ -35,7 +35,7 @@
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205214500-969506490.png">
-<meta property="og:updated_time" content="2020-03-09T12:53:25.059Z">
+<meta property="og:updated_time" content="2020-03-09T12:56:15.270Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="计算机网络——TCP的流水线传输">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
@@ -243,11 +243,11 @@
 <p>&emsp;&emsp;这里就有一个问题，为什么接收方接收到乱序的报文后，不可以先将它缓存下来，等序号更小的报文段到达后，再一同传递给上层？那是因为没有太大的必要性。就拿上面的例子来说，假设报文<code>n</code>丢失，发送方将重传<code>n，n+1，n+2</code>等所有已经发送但还没有接收到<code>ACK</code>的报文，所以接收方就没有必要再缓存之前乱序到达的报文段了。而对于乱序到达的报文，有不小的几率是前面的报文已经丢失。尤其是乱序到达的越多，之前的那些报文丢失的几率越大。</p>
 <br>
 
-<h3 id="emsp-2-3-选择重传（SR）"><a href="#emsp-2-3-选择重传（SR）" class="headerlink" title="&emsp;2.3 选择重传（SR）"></a>&emsp;2.3 选择重传（SR）</h3><p>&emsp;&emsp;<code>GBN</code>最大的一个缺陷就是，在发生丢包事件时，可能出现很大程度的无用功。比如说发送方同时发送出了<code>10</code>个报文段，但是第一个报文段丢失，结果将导致这<code>10</code>个报文段都要重传，就算后面<code>9</code>个报文段成功到达，也会被接收方丢弃。而选择重传机制解决了这个问题，因为它将有选择地重传报文段。</p>
+<h3 id="emsp-2-3-选择重传（SR）"><a href="#emsp-2-3-选择重传（SR）" class="headerlink" title="&emsp;2.3 选择重传（SR）"></a>&emsp;2.3 选择重传（SR）</h3><p>&emsp;&emsp;<code>GBN</code>最大的一个缺陷就是，在发生传输超时事件时，可能出现很大程度的无用功。比如说发送方同时发送出了<code>10</code>个报文段，但是第一个报文段丢失，结果将导致这<code>10</code>个报文段都要重传，就算后面<code>9</code>个报文段成功到达，也会被接收方丢弃。而选择重传机制解决了这个问题，因为它将有选择地重传报文段。</p>
 <p>&emsp;&emsp;<code>SR</code>与<code>GBN</code>类似，它也维护一个大小为<code>N</code>的窗口，只有序号落在窗口中的报文段才允许被发送。但是和<code>GBN</code>不同，<code>SR</code>的窗口中报文段不会被按顺序确认，后发出的报文也可以被先确认。和上面类似，我们假设窗口的第一个报文段的序号，也就是最先被发出但还没收到<code>ACK</code>的报文段的序号为<code>sned_base</code>，而下一个允许发送的报文段的序号为<code>nextseqnum</code>。和<code>GBN</code>不同，<code>SR</code>的接收方不管报文段是否按顺序到达，都会接收并发送相应的<code>ACK</code>报文，所以对于发送方的窗口，将充斥着三类报文段：</p>
 <ol>
-<li>已经发出，但是还没接收到ACK的报文段；</li>
-<li>已经发出，并成功接收到ACK的报文段；</li>
+<li>已经发出，但是还没接收到<code>ACK</code>的报文段；</li>
+<li>已经发出，并成功接收到<code>ACK</code>的报文段；</li>
 <li>可以发送，但是还没有发送的报文段；</li>
 </ol>
 <p>&emsp;&emsp;所以<code>SR</code>发送端的报文段的分布如下所示：</p>
@@ -362,7 +362,7 @@
     <div class="content">
         
 <span class="post-time">
-    Last updated: <time datetime="2020-03-09T12:53:25.059Z" itemprop="dateUpdated">2020-03-09 20:53:25</time>
+    Last updated: <time datetime="2020-03-09T12:56:15.270Z" itemprop="dateUpdated">2020-03-09 20:56:15</time>
 </span><br>
 
 

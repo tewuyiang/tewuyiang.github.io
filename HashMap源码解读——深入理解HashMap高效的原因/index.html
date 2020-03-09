@@ -21,19 +21,19 @@
     
     
     <meta name="keywords" content="Java容器">
-    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是是JavaSE的重中之重，同时也是面试中的必考点，所以对容器源码的研究必不可少。今天我研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。">
 <meta name="keywords" content="Java容器">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HashMap源码解读——深入理解HashMap高效的原因">
 <meta property="og:url" content="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/index.html">
 <meta property="og:site_name" content="博客主页">
-<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是是JavaSE的重中之重，同时也是面试中的必考点，所以对容器源码的研究必不可少。今天我研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png">
-<meta property="og:updated_time" content="2020-02-25T15:51:12.506Z">
+<meta property="og:updated_time" content="2020-03-09T12:57:32.667Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HashMap源码解读——深入理解HashMap高效的原因">
-<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;Java的容器是是JavaSE的重中之重，同时也是面试中的必考点，所以对容器源码的研究必不可少。今天我研究了一下HashMap的源码，颇有心得，所以写篇博客分享一下HashMap的实现原理。内容主要包括HashMap的底层结构，hash函数的原理，以及HashMap的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。">
 <meta name="twitter:image" content="https://img2018.cnblogs.com/blog/1324014/202002/1324014-20200225175727634-1038750713.png">
     
     <link rel="shortcut icon" href="/img/title.png">
@@ -200,7 +200,7 @@
 
         </div>
         <div class="post-content" id="post-content" itemprop="postContent">
-            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;<code>Java</code>的容器是面试中的必考点，最近为了准备春招，我开始阅读容器的源码。今天研究了一下<code>HashMap</code>的源码，颇有心得，所以写篇博客分享一下<code>HashMap</code>的实现原理。内容主要包括<code>HashMap</code>的底层结构，<code>hash</code>函数的原理，以及<code>HashMap</code>的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清楚的理解<code>HashMap</code>高效的秘诀。</p>
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;<code>Java</code>的容器是是<code>JavaSE</code>的重中之重，同时也是面试中的必考点，所以对容器源码的研究必不可少。今天我研究了一下<code>HashMap</code>的源码，颇有心得，所以写篇博客分享一下<code>HashMap</code>的实现原理。内容主要包括<code>HashMap</code>的底层结构，<code>hash</code>函数的原理，以及<code>HashMap</code>的容量机制等内容。内容很多，但是这些内容彼此相辅相成，并不适合分开来叙述，所以将它们放在一起进行讲解。相信大家看完这篇博客，将清楚的理解<code>HashMap</code>高效的秘诀。</p>
 <br>
 
 <h2 id="二、解析"><a href="#二、解析" class="headerlink" title="二、解析"></a>二、解析</h2><h3 id="emsp-2-1-什么是Hash"><a href="#emsp-2-1-什么是Hash" class="headerlink" title="&emsp;2.1 什么是Hash"></a>&emsp;2.1 什么是Hash</h3><p><strong>&emsp;&emsp;Hash，一般翻译做“散列”，也有直接音译为“哈希”的，就是把任意长度的输入，通过散列算法，变换成固定长度的输出，该输出就是散列值。</strong>这种转换是一种压缩映射，也就是，散列值的空间通常远小于输入的空间，不同的输入可能会散列成相同的输出，所以不可能从散列值来唯一的确定输入值。简单的说就是一种将任意长度的消息压缩到某一固定长度的消息摘要的函数（此处引用其他博客）。简单来说，就是<strong>将一个任意类型的数据，根据一定的算法，计算出一个标识它的<code>int</code>类型的整数，也就是<code>hash</code>值</strong>。</p>
@@ -287,7 +287,7 @@
     <div class="content">
         
 <span class="post-time">
-    Last updated: <time datetime="2020-02-25T15:51:12.506Z" itemprop="dateUpdated">2020-02-25 23:51:12</time>
+    Last updated: <time datetime="2020-03-09T12:57:32.667Z" itemprop="dateUpdated">2020-03-09 20:57:32</time>
 </span><br>
 
 
