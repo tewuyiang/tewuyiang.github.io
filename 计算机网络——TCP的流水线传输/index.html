@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>计算机网络——TCP的流水线传输 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="计算机网络">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
+<meta name="keywords" content="计算机网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络——TCP的流水线传输">
+<meta property="og:url" content="https://tewuyiang.github.io/计算机网络——TCP的流水线传输/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205025935-1047326744.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205214500-969506490.png">
+<meta property="og:updated_time" content="2020-03-09T12:53:25.059Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机网络——TCP的流水线传输">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">计算机网络——TCP的流水线传输</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">计算机网络——TCP的流水线传输</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-08T14:04:30.000Z" itemprop="datePublished" class="page-time">
+  2020-03-08
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是流水线传输以及为什么需要它"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是流水线传输以及为什么需要它</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-流水线传输将要面临的问题"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 流水线传输将要面临的问题</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-回退N步（GBN）"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.2 回退N步（GBN）</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-选择重传（SR）"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.3 选择重传（SR）</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-TCP的流水线传输"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.4 TCP的流水线传输</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-窗口大小的限制"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.5 窗口大小的限制</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-计算机网络——TCP的流水线传输"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">计算机网络——TCP的流水线传输</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-08 22:04:30" datetime="2020-03-08T14:04:30.000Z"  itemprop="datePublished">2020-03-08</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/计算机网络/">计算机网络</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现<code>TCP</code>协议太过复杂，所以想写一下<code>TCP</code>的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及<code>TCP</code>是如何实现流水线传输的。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-什么是流水线传输以及为什么需要它"><a href="#emsp-2-1-什么是流水线传输以及为什么需要它" class="headerlink" title="&emsp;2.1 什么是流水线传输以及为什么需要它"></a>&emsp;2.1 什么是流水线传输以及为什么需要它</h3><p>&emsp;&emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是什么情况。假设客户端和服务器建立了一条<code>TCP</code>连接，同时客户端需要向服务器发送一个大文件，此时若<code>TCP</code>没有实现流水线传输，则客户端将如何向服务器发送数据呢？由于网络对数据报长度的限制，<code>TCP</code>会将文件分割成很多的数据段，然后从前往后逐一发送，先发送第一个<code>TCP</code>数据段，当接收到服务器的确认报文后，再发送第二段，以此类推。这样有什么问题？我们发现，客户端在等待数据段在网络中传输，并接收到<code>ACK</code>报文的这段时间，完全是没有工作的，这是一种极大的资源浪费。假设一个数据段的大小是<code>10KB</code>，而客户端将数据送入网络的速率是<code>10M/s</code>，而数据的往返时间（RTT）是<code>1s</code>，由于每次只能传输一个数据段，所以在<code>1s</code>内，只传输了<code>10KB</code>的数据，尽管理论传输速率达到了<code>10M/s</code>，却由于这种逐个传输的机制，导致大部分都没有利用上。而且正是因为这种机制，导致要完整的传输完一份数据的时间大大增加。</p>
+<p>&emsp;&emsp;正是为了解决上面所述的问题，才有了流水线传输。流水线传输的原理很简单：<strong>连续发送多个数据段，而不需要先等待之前发送的数据段被确认</strong>。第一段说的情况中，最大的浪费就是等待<code>ACK</code>到达的这段时间，客户端什么事情都干不了，而流水线就是为了解决这个问题。同样是一份文件，被分成了多个数据段，假设客户端连续发送<code>3</code>个数据段，被服务器确认接收后，再发送<code>3</code>个，以此类推。因为合理利用了等待的时间，这样相比于之前，速度将提升<code>3</code>倍。这就是流水线传输，而每次发送多少个数据段，将由具体的实现决定以及网络拥塞情况动态决定。</p>
+<br>
+
+<h3 id="emsp-2-2-流水线传输将要面临的问题"><a href="#emsp-2-2-流水线传输将要面临的问题" class="headerlink" title="&emsp;2.2 流水线传输将要面临的问题"></a>&emsp;2.2 流水线传输将要面临的问题</h3><p>&emsp;&emsp;流水线传输和逐个传输有很大的区别，而其中一个非常关键的区别就是：<strong>数据段可能不会按顺序到达</strong>。在使用逐个传输的机制时，我们完全不需要考虑这个问题，因为每次都只发送一个数据段，等这个发送成功时，再发送下一个，所以数据段一定是按顺序到达的。但是流水线不同，流水线机制中，发送发一次将会发送多个数据，而由于网络的不确定性，这多个数据可能不是通过一条路径到达目的地，所以完全有可能出现靠后的数据段先到达目的地的可能。</p>
+<p>&emsp;&emsp;为了接收方在接收到多个数据段后，能够将它们重新按照顺序组合起来，<code>TCP</code>为每一个数据段都进行了编号（<code>TCP</code>报文结构中有一个<code>32位</code>的序号字段），通过这个序号，接收方就可以知道当前收到的数据段是属于完整数据的哪一部分了。假设报文段是按照<code>0，1，2，3，4，5</code>……逐一编号的，虽然具体情况并非如此，但是为了方便我们讨论流水线传输，我们暂且这么认为。接下来我们就来讨论流水线传输的两种理论实现方式——<strong>回退N步</strong>和<strong>选择重传</strong>。</p>
+<br>
+
+<h3 id="emsp-2-2-回退N步（GBN）"><a href="#emsp-2-2-回退N步（GBN）" class="headerlink" title="&emsp;2.2 回退N步（GBN）"></a>&emsp;2.2 回退N步（GBN）</h3><p>&emsp;&emsp;<strong>回退N步</strong>协议简称为<code>GBN</code>，是流水线传输的一种理论实现方式。在<code>GBN</code>中，将维护一个<strong>大小为N的窗口</strong>来限制数据的发送，这个窗口其实就是一个区间，而序号落在这个区间内的报文段，都可以不需要等待之前的报文段被确认而直接发送。</p>
+<p>&emsp;&emsp;在<code>GBN</code>中，我们可以将所有的报文段序号划分为四个区间：</p>
+<ol>
+<li>已经发送并接收到<code>ACK</code>报文的报文段；</li>
+<li>已经发送但是还没有接收到<code>ACK</code>报文的报文段；</li>
+<li>允许被发送，但是还没有发送的报文段；</li>
+<li>还不能发送的报文段；</li>
+</ol>
+<p>&emsp;&emsp;这里我们定义几个变量，方便我们解释后面的内容。假设我们将当前第一个被发送，但是还没有接收到<code>ACK</code>的报文段的序号定义为<code>base</code>，而下一个需要被发送的报文段的序号被定义为<code>nextseqnum</code>，则对于上面的四部分，每一部分都对应一个区间。第一部分的序号将落在<code>[0, base - 1]</code>中，第二部分的序号将落在<code>[base, nextseqnum - 1]</code>，第三部分将落在<code>[nextseqnum, base + N - 1]</code>（N是窗口的长度），最后大于<code>base+N</code>的就是第四部分。而第二和第三部分共同组成了长度为<code>N</code>的窗口。如下图所示：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;在上图中的情况下，发送方还允许发送<code>6</code>个报文段，即属于第三部分的报文段。而为什么需要设置窗口，而不是无限制发送呢？当然是为了不让网络太过拥挤，造成数据发送缓慢甚至丢失的情况。下面我们根据<strong>发送方</strong>处理各种事件的方式，来进一步了解<code>GBN</code>：</p>
+<ul>
+<li><strong>事件一</strong>：上层调用接口，向网络中传输数据。此时，发送方将检查窗口中是否有剩余的空间，即窗口中是否包含序号属于第三个区间的报文段。若窗口有空闲，则将数据发出，同时让<code>nextseqnum + 1</code>。若此时窗口中的所有数据段都是已经发送但还没有接收到<code>ACK</code>的数据段，则发送方可以将数据返回给上层，隐式地告诉上层窗口已满，而上层可能会过一段时间再试；或者也可以将上层传递的数据放入缓存，等窗口有空闲区间之后再将数据发送；或者使用同步机制，仅当窗口有空闲时，才允许上层调用发送数据的接口。在实际实现中一般使用第二种。</li>
+<li><strong>事件二</strong>：接收到一个<code>ACK</code>报文。在<code>GBN</code>中，使用的是<strong>累计确认</strong>机制（累计确认指的是当接收到<code>n</code>号报文段的<code>ACK</code>报文，表示<code>0 - n</code>号报文段都已经被成功接收），所以当收到一个<code>ACK</code>报文时，窗口将向前移动，直到<code>base</code>的值等于这个<code>ACK</code>报文所确认的下一个报文的序号为止。而此时，又将有更大的序号进入到窗口中，窗口中将产生空闲区间。</li>
+<li><strong>事件三</strong>：发生超时事件。在<code>GBN</code>中，只有一个计时器，而它记录的是序号为<code>base</code>的报文是否超时，当这个报文段被发出后，超过了指定时间还没有收到<code>ACK</code>报文（表明大概率已经丢失），则发送方将重传所有已经发送但还没有接收到<code>ACK</code>报文的报文段，也就是上面图片中的第二部分。这就是<strong>回退N步</strong>这个名字的由来。当此事件发生，计时器将被重新启动。</li>
+</ul>
+<p>&emsp;&emsp;这里在补充一下发送方的计时器，当接收到一个<code>ACK</code>后，若还存在已经发送但是没有收到<code>ACK</code>的报文段，计时器将重新启动；若不存在，则停止，并等到有数据发出后再启动。说完了发送方，我们再来说说接收方对于各种事件是如何处理的：假设接收方已经成功接收到了报文段<code>0到n-1</code>，此时收到报文<code>n</code>，这是一条按顺序到达的报文，所以接收方直接将数据段交付给上层；但是若收到的不是<code>n</code>，而是<code>n+1</code>，甚至更大，则接收方会将它丢弃，并向发送方回送<code>n-1</code>的<code>ACK</code>报文，表示它目前成功接收到的最大的报文段是<code>n-1</code>（被丢弃的不算成功接收），而发送方在超时后，将重传<code>n，n+1</code>……这就是<code>GBN</code>累计确认的实现原理，<strong>接收方每次确认的都是当前已经接收，并且按序到达的最大值</strong>。所以对于接收方来说，只需要维护一个变量，即当前期望获得的报文段的序号<code>expectedSeqNum</code>，在上面的例子中<code>expectedSeqNum == n</code>。</p>
+<p>&emsp;&emsp;这里就有一个问题，为什么接收方接收到乱序的报文后，不可以先将它缓存下来，等序号更小的报文段到达后，再一同传递给上层？那是因为没有太大的必要性。就拿上面的例子来说，假设报文<code>n</code>丢失，发送方将重传<code>n，n+1，n+2</code>等所有已经发送但还没有接收到<code>ACK</code>的报文，所以接收方就没有必要再缓存之前乱序到达的报文段了。而对于乱序到达的报文，有不小的几率是前面的报文已经丢失。尤其是乱序到达的越多，之前的那些报文丢失的几率越大。</p>
+<br>
+
+<h3 id="emsp-2-3-选择重传（SR）"><a href="#emsp-2-3-选择重传（SR）" class="headerlink" title="&emsp;2.3 选择重传（SR）"></a>&emsp;2.3 选择重传（SR）</h3><p>&emsp;&emsp;<code>GBN</code>最大的一个缺陷就是，在发生丢包事件时，可能出现很大程度的无用功。比如说发送方同时发送出了<code>10</code>个报文段，但是第一个报文段丢失，结果将导致这<code>10</code>个报文段都要重传，就算后面<code>9</code>个报文段成功到达，也会被接收方丢弃。而选择重传机制解决了这个问题，因为它将有选择地重传报文段。</p>
+<p>&emsp;&emsp;<code>SR</code>与<code>GBN</code>类似，它也维护一个大小为<code>N</code>的窗口，只有序号落在窗口中的报文段才允许被发送。但是和<code>GBN</code>不同，<code>SR</code>的窗口中报文段不会被按顺序确认，后发出的报文也可以被先确认。和上面类似，我们假设窗口的第一个报文段的序号，也就是最先被发出但还没收到<code>ACK</code>的报文段的序号为<code>sned_base</code>，而下一个允许发送的报文段的序号为<code>nextseqnum</code>。和<code>GBN</code>不同，<code>SR</code>的接收方不管报文段是否按顺序到达，都会接收并发送相应的<code>ACK</code>报文，所以对于发送方的窗口，将充斥着三类报文段：</p>
+<ol>
+<li>已经发出，但是还没接收到ACK的报文段；</li>
+<li>已经发出，并成功接收到ACK的报文段；</li>
+<li>可以发送，但是还没有发送的报文段；</li>
+</ol>
+<p>&emsp;&emsp;所以<code>SR</code>发送端的报文段的分布如下所示：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205025935-1047326744.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;和<code>GBN</code>一样，我们根据<code>SR</code>发送方要处理的事件，来更进一步的了解它：</p>
+<ul>
+<li><strong>事件一</strong>：上层调用数据传输接口，请求发送数据。此时，发送端将检查窗口中是否还有空闲空间，即窗口中是否还存在可用，但是还没有使用的序号。若存在，则使用<code>nextseqnum</code>指向的序号封装报文段并发送。同时<code>nextseqnum</code>指针向前移动，直到没有空间或者数据发送完毕为止；若不存在空闲序号，则发送方可以将数据返回给上层，隐式地告知上层当前发送接口不可用，可以稍后再试，或者也可以将数据缓存，当窗口有空闲时再发送，或者使用同步机制。</li>
+<li><strong>事件二</strong>：接收到某个报文段的<code>ACK</code>报文。由于在<code>SR</code>中，接收方发送的<code>ACK</code>报文就是对接收到的报文进行确认，不论是否有序，也就是<strong>非累计确认</strong>，所以当发送方接收到<code>ACK</code>报文时，将有三种情况。（1）接收到一条已经被确认的报文段的重复<code>ACK</code>（一般是由超时引起），则忽略它；（2）收到一条序号不是<code>send_base</code>的报文段的<code>ACK</code>，则标记这个序号的报文已经被确认；（3）收到序号为<code>send_base</code>的报文的<code>ACK</code>报文，此时<code>send_base</code>指针向前移动，直到移动到第一个已经发送但是还没有被确认的报文序号为止。比如上图，接收到了<code>send_base</code>和<code>send_base+1</code>的<code>ACK</code>报文，则此时<code>send_base</code>将更新为<code>send_base+4</code>。</li>
+<li><strong>事件三</strong>：报文超时。由于在<code>SR</code>中，报文可以无序到达，所以在理论实现中，需要为每一个已经发送的报文段都绑定一个计时器，来记录此报文是否超时。若某个已经发送的报文段的计时器超时，发送方将重传对应的报文，注意，和<code>GBN</code>不同，<code>SR</code>只重传超时的那条报文。</li>
+</ul>
+<p>&emsp;&emsp;说完了发送方，再来说一说接收方。在<code>SR</code>机制中，发送方若接收到一个乱序报文段，不会将其丢失，而是放入到接收缓存中，然后等待序号更小的报文段都到达后，再取出交付给上层。所以对于接收方来说，报文序号分为四类：</p>
+<ol>
+<li>期待接收到的报文段，即下一条想要的报文段；</li>
+<li>已经接收，但不是按顺序到达报文段；</li>
+<li>可以接收的报文段；</li>
+<li>暂时还不能接收的报文段；</li>
+</ol>
+<p>&emsp;&emsp;而接收方也是通过维护一个大小为<code>N</code>的窗口来管理这些报文段。同时，在接收方维护了一个变量<code>rcv_base</code>，表示窗口的第一个报文段的序号，其实也就是下一条期待接收的报文。至于为什么接收方也需要维护一个窗口限制接收，是因为接收缓存的大小有限，假设期待接收到的报文一直没有到达，到达的一直都是乱序的报文，此时接收方要将它们放入接收缓存，但是由于接收缓存大小有限，所以不能无限制地接收，只能通过窗口来限制可以接收的范围。下面就是接收窗口的模型图：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;对于接收方来说，若接收到一条报文，将会分为四种情况进行处理：</p>
+<ol>
+<li>接收到的报文段的序号为<code>rcv_base</code>。此时<code>rcv_base</code>将向前移动，直到到达第一个没有被接收的序号为止，这样意味着窗口在向前移动，并腾出了新的空闲区间；</li>
+<li>接收到的报文序号在窗口中，但不是<code>rcv_base</code>。此时，若这个报文之前已经接收过，则直接发送此报文对应的<code>ACK</code>报文，但是不接收；若没有接收过，则将此报文放入接收缓存中，再发送<code>ACK</code>报文；</li>
+<li>接收到的报文序号小于<code>rcv_base</code>，则表示这条报文已经被接收过，直接发送一个<code>ACK</code>报文，但是不接收此报文段；</li>
+<li>除上述外，其他报文段都忽略；</li>
+</ol>
+<p>&emsp;&emsp;这里再讨论一下为什么接收方会接收到已经接收过的报文段。原因就是<code>ACK</code>报文超时到达接收方，或者<code>ACK</code>报文丢失，所以导致了发送方对报文段进行重传。而此时，为了让发送方知道自己已经成功接收，接收方需要再次发送此报文段的<code>ACK</code>报文，而不是忽略它。</p>
+<br>
+
+<h3 id="emsp-2-4-TCP的流水线传输"><a href="#emsp-2-4-TCP的流水线传输" class="headerlink" title="&emsp;2.4 TCP的流水线传输"></a>&emsp;2.4 TCP的流水线传输</h3><p>&emsp;&emsp;上面两种流水线传输机制是两种理论模型，而实际的<code>TCP</code>流水线传输，是对这两种模型的结合和改进，抽取了各自好的部分，弥补对方不足的部分。在<code>TCP</code>的流水线传输机制中，和<code>GBN</code>一样使用的是<strong>累计确认</strong>，同时只使用一个计时器，用来记录窗口中的第一个报文段是否超时，同时只重传丢失的分组；对于接收方，接收到不按照顺序到达的报文段，不会丢弃，而是放入接收缓存。下面我就来说一说<code>TCP</code>的流水线传输是如何实现的。</p>
+<p>&emsp;&emsp;对于发送方，<code>TCP</code>的流水线传输与<code>GBN</code>有着高度的相似性。同样一个大小为<code>N</code>的窗口，同样一个<code>base</code>和一个<code>nextseqnum</code>变量，同样的序号划分，也就是如下图所示的模型：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;同样的累计确认，同样的序号划分，同样的单一计时器，所以发送端的实现几乎一致，除了最重大的一个地方。<code>GBN</code>最大的缺陷就是当超时事件发生时，会进行大量不必要的重传，而<code>TCP</code>的流水线传输避免了这个问题。这里的计时器记录的是序号为<code>base</code>的数据段是否超时，若发生超时事件时，发送方只会重传序号为<code>base</code>的报文段，而不会重传后续的这些已经发送但还没有接收到<code>ACK</code>的报文段。而且除此之外，这里还使用到了一个叫<strong>快速重传</strong>的机制，提高效率。除了重传，<code>TCP</code>流水线传输的发送方基本上与<code>GBN</code>相同。</p>
+<p>&emsp;&emsp;下面再来说一说接收方。在<code>TCP</code>传输的接收方，也会维护一个和<code>SR</code>类似的接收窗口，来限制数据的接收。也就是和<code>SR</code>一样的模型图：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;但是实际的接收方式，相对于<code>SR</code>来说，有了很大的改变。在接收方，若接收到一条报文，将产生以下几种情况：</p>
+<ol>
+<li>接收到按序到达的报文，也就是序号为<code>rcv_base</code>的报文，则<code>rcv_base</code>向前移动，也就是窗口向前移动，直到移动到第一个没有接收到的序号为止，同时对新的<code>rcv_base</code>的前一条报文进行确认。比如上面这张图，接收到<code>rcv_base</code>后，窗口将移动到<code>rcv_base+4</code>，而确认报文将是对<code>rcv_base+3</code>的确认，表示已经接收到<code>rcv_base+3</code>及其之前全部报文；</li>
+<li>接收到的报文序号不是<code>rcv_base</code>，但是依旧落在窗口内，则发送确认报文，但是是对<code>rcv_base - 1</code>这个报文的确认，表示现在接收方已经接收到的按序的报文中，最大值是<code>rcv_base - 1</code>，下一条需要的是<code>rcv_base</code>。同时，再判断这条报文是否已经有缓存，若没有，则加入到接收缓存中；</li>
+</ol>
+<p>&emsp;&emsp;由于<code>TCP</code>的流水线传输使用的是累计确认，所以没有必要每接收到一条报文，都进行一次确认，而是有选择地进行确认，这样可以减少传输<code>ACK</code>报文的数量，节省网络资源。而在<code>TCP</code>规范中，对于何时传输<code>ACK</code>，给出了几条建议：</p>
+<ol>
+<li>接收到序号为<code>rcv_base</code>的报文段时，若这之前的报文都已经确认过了，则延迟<code>ACK</code>报文的发送，等待另一个报文段的到达（最多等待<code>500毫秒</code>），若在等待的过程中，另一条按顺序的报文段到达，则直接发送那条报文的确认，同时确认了两条报文；若这段时间内无有序报文到达，则发送当前报文的确认；</li>
+<li>接收到序号为<code>rcv_base</code>的报文段时，若在这之前还有没被确认的报文，比如说前一条报文在等待当前报文的到达（情况一），则立即发送一个<code>ACK</code>，确认这两条报文；</li>
+<li>接收到一个序号比<code>rcv_base</code>大的报文段，表示出现了乱序，此时立即发送一个<code>ACK</code>报文，告知发送方下一条需要的是<code>rcv_base</code>；</li>
+<li>若接收到的报文段序号是<code>rcv_base</code>，同时之前已经接收了一些乱序的报文段，则立即发送<code>ACK</code>报文；</li>
+</ol>
+<p>&emsp;&emsp;上面四种建议中，<code>1-2</code>条是为了更少地发送<code>ACK</code>报文，而<code>3-4</code>条则是<strong>快速重传</strong>机制的依据（尤其是第三条）。这种实现，也有另外一种叫法，叫做<strong>选择确认</strong>。</p>
+<br>
+
+<h3 id="emsp-2-5-窗口大小的限制"><a href="#emsp-2-5-窗口大小的限制" class="headerlink" title="&emsp;2.5 窗口大小的限制"></a>&emsp;2.5 窗口大小的限制</h3><p>&emsp;&emsp;在流水线传输中，需要注意一个问题，那就是窗口不能太大，否则将会出现问题。序号不是无限大的，比如在实际实现中，序号是一个<code>32</code>位的<code>int</code>整数，所以当序号超过最大值时，将对最大值取模，重新获取一个较小的值作为序号。也就是说，序号范围实际可以看成一个环，而在这个环中，有两个窗口，一个是接收窗口，而一个是发送窗口。看下面一种情况，假设序号只有<code>0，1，2，3</code>这四个，窗口大小<code>N == 3</code>：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205214500-969506490.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<ul>
+<li><p>初始时刻，发送方的窗口是<code>0，1，2</code>，而接收方的窗口也是<code>0，1，2</code>；</p>
+</li>
+<li><p>发送方发送报文<code>0，1，2</code>，到达接收方后，接收方的发送确认报文，同时窗口移动，变为<code>3，0，1</code>；</p>
+</li>
+<li><p>确认报文没有按时到达发送方，于是发送方重传报文段<code>0</code>；</p>
+</li>
+<li><p>接收方接收到后，检查自己的窗口，发现序号<code>0</code>在窗口中，而且并未接收，于是将此报文当作一个新的报文段接收；</p>
+</li>
+</ul>
+<p>&emsp;&emsp;上面发生了什么？由于窗口太大，出现了序号重叠的现象，也就是在这个序号环中，接收窗口的头，触碰到了发送窗口的尾。为了避免这个问题，<strong>窗口长度必须小于等于总区间长度的一半</strong>。因为发送窗口的<strong>头</strong>和接收窗口的<strong>尾</strong>一定是重合的，而为了让发送窗口的<strong>尾</strong>不碰到接收窗口的<strong>头</strong>，必须使它们两个的<strong>长度之和小于等于总区间长度</strong>。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;长篇大论快给我写吐了，就不多说了。总之，希望这篇博客对看到的人有所帮助，若是发现错误的部分，也希望能够提出来。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《计算机网络——自顶向下方法（原书第七版）》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-03-09T12:53:25.059Z" itemprop="dateUpdated">2020-03-09 20:53:25</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="https://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/计算机网络/">计算机网络</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&title=《计算机网络——TCP的流水线传输》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&title=《计算机网络——TCP的流水线传输》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP的流水线传输》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/计算机网络——TCP的拥塞控制/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">计算机网络——TCP的拥塞控制</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&title=《计算机网络——TCP的流水线传输》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&title=《计算机网络——TCP的流水线传输》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP的流水线传输》 — 博客主页&url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/&via=https://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/计算机网络——TCP的流水线传输/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
