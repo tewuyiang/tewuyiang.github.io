@@ -25,7 +25,7 @@
 <meta name="keywords" content="Java容器">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HashMap源码解读——逐句分析get和put方法的实现">
-<meta property="og:url" content="https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/index.html">
+<meta property="og:url" content="http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/index.html">
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
 <meta property="og:locale" content="default">
@@ -34,7 +34,7 @@
 <meta name="twitter:title" content="HashMap源码解读——逐句分析get和put方法的实现">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;最近在研究HashMap的源码，经过这几天的研究，我对HashMap的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下HashMap中，最最重要的两个方法——get和put的代码实现。（注：以下代码基于JDK1.8） &amp;emsp;&amp;emsp;若想要看懂这两个方法的源代码，首先得对HashMap的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写">
     
-    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="shortcut icon" href="/blog/img/title.png">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
     <script>window.lazyScripts=[]</script>
 
@@ -51,10 +51,10 @@
     <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
         <i class="icon icon-lg icon-close"></i>
     </a>
-    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+    <div class="brand-wrap" style="background-image:url(/blog/img/brand.jpg)">
       <div class="brand">
-        <a href="/" class="avatar waves-effect waves-circle waves-light">
-          <img src="/img/avatar.jpg">
+        <a href="/blog/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/blog/img/avatar.jpg">
         </a>
         <hgroup class="introduce">
           <h5 class="nickname">特务依昂</h5>
@@ -66,28 +66,28 @@
       <ul class="nav">
         
             <li class="waves-block waves-effect">
-              <a href="/"  >
+              <a href="/blog/"  >
                 <i class="icon icon-lg icon-home"></i>
                 主页
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/archives"  >
+              <a href="/blog/archives"  >
                 <i class="icon icon-lg icon-archives"></i>
                 博客
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/tags"  >
+              <a href="/blog/tags"  >
                 <i class="icon icon-lg icon-tags"></i>
                 标签
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/categories"  >
+              <a href="/blog/categories"  >
                 <i class="icon icon-lg icon-th-list"></i>
                 分类
               </a>
@@ -155,7 +155,7 @@
 </time>
 
 
-	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/Java容器/">Java容器</a></li></ul>
 
             
         </h5>
@@ -186,7 +186,7 @@
             <time class="post-time" title="2020-02-25 23:32:31" datetime="2020-02-25T15:32:31.000Z"  itemprop="datePublished">2020-02-25</time>
 
             
-	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java容器/">Java容器</a></li></ul>
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/Java容器/">Java容器</a></li></ul>
 
 
 
@@ -201,7 +201,7 @@
             <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;最近在研究<code>HashMap</code>的源码，经过这几天的研究，我对<code>HashMap</code>的底层实现有了一个比较清晰的认识。今天就来写一篇博客，带大家阅读一下<code>HashMap</code>中，最最重要的两个方法——<code>get</code>和<code>put</code>的代码实现。（注：以下代码基于<code>JDK1.8</code>）</p>
 <p>&emsp;&emsp;若想要看懂这两个方法的源代码，首先得对<code>HashMap</code>的底层结构有一个清晰的认识，若不清楚的，可以看看我之前写的一篇博客，这篇博客对<code>HashMap</code>的底层结构和实现进行了一个比较清晰和全面的讲解，同时博客的最底下附上了两篇阿里架构师对<code>HashMap</code>的分析，写的非常好，很有参考价值：</p>
 <ul>
-<li><p>Hexo链接 —— <a href="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/">HashMap源码解读——深入理解HashMap高效的原因</a></p>
+<li><p>Hexo链接 —— <a href="https://tewuyiang.github.io/HashMap源码解读——深入理解HashMap高效的原因/" target="_blank" rel="noopener">HashMap源码解读——深入理解HashMap高效的原因</a></p>
 </li>
 <li><p>博客园链接 —— <a href="https://www.cnblogs.com/tuyang1129/p/12362959.html" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12362959.html</a></p>
 </li>
@@ -267,8 +267,8 @@
     </div>
     
     <footer>
-        <a href="https://tewuyiang.github.io">
-            <img src="/img/avatar.jpg" alt="特务依昂">
+        <a href="http://tewuyiang.gitee.io/blog">
+            <img src="/blog/img/avatar.jpg" alt="特务依昂">
             特务依昂
         </a>
     </footer>
@@ -279,7 +279,7 @@
 
         <div class="post-footer">
             
-	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java容器/">Java容器</a></li></ul>
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/blog/tags/Java容器/">Java容器</a></li></ul>
 
 
             
@@ -289,7 +289,7 @@
 <div class="page-share" id="pageShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -299,22 +299,22 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
       <li>
-        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
           <i class="icon icon-facebook"></i>
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
       <li>
-        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
           <i class="icon icon-google-plus"></i>
         </a>
       </li>
@@ -337,7 +337,7 @@
 <nav class="post-nav flex-row flex-justify-between">
   
     <div class="waves-block waves-effect prev">
-      <a href="/HashMap源码解读——逐句分析resize方法的实现/" id="post-prev" class="post-nav-link">
+      <a href="/blog/HashMap源码解读——逐句分析resize方法的实现/" id="post-prev" class="post-nav-link">
         <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
         <h4 class="title">HashMap源码解读——逐句分析resize方法的实现</h4>
       </a>
@@ -346,7 +346,7 @@
 
   
     <div class="waves-block waves-effect next">
-      <a href="/HashMap源码解读——深入理解HashMap高效的原因/" id="post-next" class="post-nav-link">
+      <a href="/blog/HashMap源码解读——深入理解HashMap高效的原因/" id="post-next" class="post-nav-link">
         <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
         <h4 class="title">HashMap源码解读——深入理解HashMap高效的原因</h4>
       </a>
@@ -420,7 +420,7 @@
 <div class="global-share" id="globalShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -430,22 +430,22 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&title=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
       <li>
-        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/" data-title=" Facebook">
           <i class="icon icon-facebook"></i>
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《HashMap源码解读——逐句分析get和put方法的实现》 — 博客主页&url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
       <li>
-        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/" data-title=" Google+">
           <i class="icon icon-google-plus"></i>
         </a>
       </li>
@@ -456,7 +456,7 @@
 <div class="page-modal wx-share" id="wxShare">
     <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
-    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/HashMap源码解读——分析get和put方法的实现/" alt="微信分享二维码">
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.gitee.io/blog/HashMap源码解读——分析get和put方法的实现/" alt="微信分享二维码">
 </div>
 
 
@@ -464,7 +464,7 @@
 
     <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
 <script>
-var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+var BLOG = { ROOT: '/blog/', SHARE: true, REWARD: false };
 
 
 </script>

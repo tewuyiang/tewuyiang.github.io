@@ -25,7 +25,7 @@
 <meta name="keywords" content="JavaSE">
 <meta property="og:type" content="article">
 <meta property="og:title" content="继承内部类时使用外部类对象.super()调用内部类的构造方法">
-<meta property="og:url" content="https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/index.html">
+<meta property="og:url" content="http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/index.html">
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="问题简介&amp;ensp;&amp;ensp;今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是外部类对象.super();   问题分析&amp;ensp;&amp;ensp;我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的">
 <meta property="og:locale" content="default">
@@ -34,7 +34,7 @@
 <meta name="twitter:title" content="继承内部类时使用外部类对象.super()调用内部类的构造方法">
 <meta name="twitter:description" content="问题简介&amp;ensp;&amp;ensp;今天在看《Java编程思想》的时候，看到了一个很特殊的语法，懵逼了半天——一个派生类继承自一个内部类，想要创建这个派生类的对象，首先得创建其父类的对象，也就是这个内部类，而调用内部类的构造方法创建其对象的语法，是外部类对象.super();   问题分析&amp;ensp;&amp;ensp;我们都知道，在Java当中，当我们创建一个类的对象时，在构造方法的第一行会默认的调用父类的">
     
-    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="shortcut icon" href="/blog/img/title.png">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
     <script>window.lazyScripts=[]</script>
 
@@ -51,10 +51,10 @@
     <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
         <i class="icon icon-lg icon-close"></i>
     </a>
-    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+    <div class="brand-wrap" style="background-image:url(/blog/img/brand.jpg)">
       <div class="brand">
-        <a href="/" class="avatar waves-effect waves-circle waves-light">
-          <img src="/img/avatar.jpg">
+        <a href="/blog/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/blog/img/avatar.jpg">
         </a>
         <hgroup class="introduce">
           <h5 class="nickname">特务依昂</h5>
@@ -66,28 +66,28 @@
       <ul class="nav">
         
             <li class="waves-block waves-effect">
-              <a href="/"  >
+              <a href="/blog/"  >
                 <i class="icon icon-lg icon-home"></i>
                 主页
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/archives"  >
+              <a href="/blog/archives"  >
                 <i class="icon icon-lg icon-archives"></i>
                 博客
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/tags"  >
+              <a href="/blog/tags"  >
                 <i class="icon icon-lg icon-tags"></i>
                 标签
               </a>
             </li>
         
             <li class="waves-block waves-effect">
-              <a href="/categories"  >
+              <a href="/blog/categories"  >
                 <i class="icon icon-lg icon-th-list"></i>
                 分类
               </a>
@@ -155,7 +155,7 @@
 </time>
 
 
-	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/JavaSE/">JavaSE</a></li></ul>
 
             
         </h5>
@@ -186,7 +186,7 @@
             <time class="post-time" title="2019-10-09 23:05:34" datetime="2019-10-09T15:05:34.000Z"  itemprop="datePublished">2019-10-09</time>
 
             
-	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JavaSE/">JavaSE</a></li></ul>
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/JavaSE/">JavaSE</a></li></ul>
 
 
 
@@ -246,8 +246,8 @@
     </div>
     
     <footer>
-        <a href="https://tewuyiang.github.io">
-            <img src="/img/avatar.jpg" alt="特务依昂">
+        <a href="http://tewuyiang.gitee.io/blog">
+            <img src="/blog/img/avatar.jpg" alt="特务依昂">
             特务依昂
         </a>
     </footer>
@@ -258,7 +258,7 @@
 
         <div class="post-footer">
             
-	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaSE/">JavaSE</a></li></ul>
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/blog/tags/JavaSE/">JavaSE</a></li></ul>
 
 
             
@@ -268,7 +268,7 @@
 <div class="page-share" id="pageShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -278,22 +278,22 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
       <li>
-        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
           <i class="icon icon-facebook"></i>
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
       <li>
-        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
           <i class="icon icon-google-plus"></i>
         </a>
       </li>
@@ -316,7 +316,7 @@
 <nav class="post-nav flex-row flex-justify-between">
   
     <div class="waves-block waves-effect prev">
-      <a href="/Java创建List对象同时进行赋值操作/" id="post-prev" class="post-nav-link">
+      <a href="/blog/Java创建List对象同时进行赋值操作/" id="post-prev" class="post-nav-link">
         <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
         <h4 class="title">Java创建List、Map等集合对象的同时进行赋值操作</h4>
       </a>
@@ -325,7 +325,7 @@
 
   
     <div class="waves-block waves-effect next">
-      <a href="/HttpServlet中service方法源码解读/" id="post-next" class="post-nav-link">
+      <a href="/blog/HttpServlet中service方法源码解读/" id="post-next" class="post-nav-link">
         <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
         <h4 class="title">HttpServlet中service方法的源码分析</h4>
       </a>
@@ -399,7 +399,7 @@
 <div class="global-share" id="globalShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=https://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -409,22 +409,22 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&title=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
       <li>
-        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/" data-title=" Facebook">
           <i class="icon icon-facebook"></i>
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/&via=https://tewuyiang.github.io" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《继承内部类时使用外部类对象.super()调用内部类的构造方法》 — 博客主页&url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
       <li>
-        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/" data-title=" Google+">
           <i class="icon icon-google-plus"></i>
         </a>
       </li>
@@ -435,7 +435,7 @@
 <div class="page-modal wx-share" id="wxShare">
     <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
-    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://tewuyiang.github.io/外部类对象.super()调用内部类的构造方法/" alt="微信分享二维码">
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.gitee.io/blog/外部类对象.super()调用内部类的构造方法/" alt="微信分享二维码">
 </div>
 
 
@@ -443,7 +443,7 @@
 
     <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
 <script>
-var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+var BLOG = { ROOT: '/blog/', SHARE: true, REWARD: false };
 
 
 </script>
