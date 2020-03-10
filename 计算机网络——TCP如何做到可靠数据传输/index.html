@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>计算机网络——TCP如何做到可靠数据传输 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="计算机网络">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;这几天写了四篇TCP系列的博客，这一篇是第五篇，也预计是这段时间的最后一篇了，写完这篇我就要开始进行网络层的研究了。若对于我其他TCP方面的博客感兴趣，可以去我个人博客的计算机网络这一分类中查阅。这篇博客就来谈一谈TCP是通过哪些手段，来保证可靠数据传输的。   二、正文&amp;emsp;2.1 网络传输存在的问题&amp;emsp;&amp;emsp;研究TCP如何保证可靠数据传输之前">
+<meta name="keywords" content="计算机网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络——TCP如何做到可靠数据传输">
+<meta property="og:url" content="http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;这几天写了四篇TCP系列的博客，这一篇是第五篇，也预计是这段时间的最后一篇了，写完这篇我就要开始进行网络层的研究了。若对于我其他TCP方面的博客感兴趣，可以去我个人博客的计算机网络这一分类中查阅。这篇博客就来谈一谈TCP是通过哪些手段，来保证可靠数据传输的。   二、正文&amp;emsp;2.1 网络传输存在的问题&amp;emsp;&amp;emsp;研究TCP如何保证可靠数据传输之前">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200307173500212-139777617.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200310210046405-1582185603.png">
+<meta property="og:updated_time" content="2020-03-10T13:01:39.856Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="计算机网络——TCP如何做到可靠数据传输">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;这几天写了四篇TCP系列的博客，这一篇是第五篇，也预计是这段时间的最后一篇了，写完这篇我就要开始进行网络层的研究了。若对于我其他TCP方面的博客感兴趣，可以去我个人博客的计算机网络这一分类中查阅。这篇博客就来谈一谈TCP是通过哪些手段，来保证可靠数据传输的。   二、正文&amp;emsp;2.1 网络传输存在的问题&amp;emsp;&amp;emsp;研究TCP如何保证可靠数据传输之前">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200307173500212-139777617.png">
+    
+    <link rel="shortcut icon" href="/blog/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/blog/img/brand.jpg)">
+      <div class="brand">
+        <a href="/blog/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/blog/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/blog/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/blog/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/blog/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/blog/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">计算机网络——TCP如何做到可靠数据传输</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">计算机网络——TCP如何做到可靠数据传输</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-09T14:13:46.000Z" itemprop="datePublished" class="page-time">
+  2020-03-09
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/计算机网络/">计算机网络</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-网络传输存在的问题"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 网络传输存在的问题</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-TCP解决数据损坏"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 TCP解决数据损坏</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-TCP解决丢包问题"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 TCP解决丢包问题</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-TCP如何解决数据乱序到达"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 TCP如何解决数据乱序到达</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-TCP的流量控制与拥塞控制"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 TCP的流量控制与拥塞控制</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-计算机网络——TCP如何做到可靠数据传输"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">计算机网络——TCP如何做到可靠数据传输</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-09 22:13:46" datetime="2020-03-09T14:13:46.000Z"  itemprop="datePublished">2020-03-09</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/blog/categories/计算机网络/">计算机网络</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;这几天写了四篇<code>TCP</code>系列的博客，这一篇是第五篇，也预计是这段时间的最后一篇了，写完这篇我就要开始进行网络层的研究了。若对于我其他<code>TCP</code>方面的博客感兴趣，可以去我个人博客的计算机网络这一分类中查阅。这篇博客就来谈一谈<code>TCP</code>是通过哪些手段，来保证可靠数据传输的。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-网络传输存在的问题"><a href="#emsp-2-1-网络传输存在的问题" class="headerlink" title="&emsp;2.1 网络传输存在的问题"></a>&emsp;2.1 网络传输存在的问题</h3><p>&emsp;&emsp;研究<code>TCP</code>如何保证可靠数据传输之前，我们先来列举一下网络传输存在什么问题，只有发现了问题，才能对症下药，找出应对的方法。<code>TCP</code>是依靠网络层的<code>IP</code>协议来发送数据，而<code>IP</code>协议是一个不可靠的协议，它仅仅只是尽最大努力传输，但是并不保证数据能够完好地到达，甚至不能保证数据能否到达。同时，网络中允许传输的最大单元（MTU）是有限制的，一般为<code>1500</code>个字节。所以，<code>TCP</code>为了发送比这个大的数据，需要将数据拆分成一个个数据段进行发送。正因为这些原因，网络传输将存在以下问题：</p>
+<ol>
+<li>数据在传输的过程中被损坏，比特的<code>0</code>变成<code>1</code>，或者<code>1</code>变成<code>0</code>；</li>
+<li>数据在传输过程中丢失，没有到达目的地；</li>
+<li>多个报文段没有按顺序到达接收方，因此接收方无法正确地将数据组合；</li>
+</ol>
+<p>&emsp;&emsp;<code>TCP</code>的实现基本上就是围绕上面三个问题，以及如何提高传输速率实现的。下面我们就来说一说<code>TCP</code>为了应对上面这些问题，做了哪些事情。</p>
+<br>
+
+<h3 id="emsp-2-2-TCP解决数据损坏"><a href="#emsp-2-2-TCP解决数据损坏" class="headerlink" title="&emsp;2.2 TCP解决数据损坏"></a>&emsp;2.2 TCP解决数据损坏</h3><p>&emsp;&emsp;我们先来讨论第一个问题，数据发生损坏。检验数据是否损坏的方式就是数据校验，以下是TCP报文的格式，可以看到其中有一个<code>16</code>位的字段，叫做<strong>校验和</strong>，这就是接收方用来校验数据是否出错的部分。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200307173500212-139777617.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;这个字段的名称叫做<strong>校验和</strong>，因为<code>TCP</code>对数据校验的方式就是校验和算法，这个算法的过程如下：</p>
+<ol>
+<li>将校验和字段置为<code>0</code>，然后将数据部分以<code>16</code>位为一个单位，进行拆分；</li>
+<li>将拆分后的若干个单元进行二进制相加，若相加结果进位到了第<code>17</code>位，则将<code>17</code>位加到第一位（其实就是<strong>补码和运算</strong>，也称为回卷），最终相加的结果取反（<code>0</code>变成<code>1</code>，<code>1</code>变成<code>0</code>），然后放入校验和字段；</li>
+<li>报文段被发送到目的地后，目标主机也进行上面两步，然后将运算的结果与首部中的校验和字段相加，再取反，若结果为<code>0</code>，则认为数据没有出错；</li>
+</ol>
+<p>&emsp;&emsp;这样是如何起到校验的作用呢？其实很简单，假设在数据传输的过程中，数据没有出错，则在发送端和接收端，求出的结果都是一样的。而校验和字段，就是这个结果的反码，也就是说，结果中为<code>1</code>的位，在反码中就为<code>0</code>，而结果中为<code>0</code>的位，在反码中就是<code>1</code>。也就是说，在数据没有出错的情况下，这个结果与校验和字段相加，一定是全<code>1</code>，而此时再取反，就是<code>0</code>了。所以只要最终求得的结果不是<code>0</code>，接收方就认为数据出错（出错后将如何处理，我暂时没有找到相关的资料，惭愧）。</p>
+<p>&emsp;&emsp;但是，上面这个算法一定可以校验出数据是否出错吗？答案是不能。因为这个校验的根本，其实不过是将数据求和，然后判断这个和有没有改变而已。而我们都知道，<code>1+2 == 2+1</code>，<code>1 + 4 == 2 + 3</code>，仅仅依靠求和，根本无法保证数据的没有发生改变。只要数据的多处都发生了错误，而且相互抵消，这种算法将无法察觉。但是<code>TCP</code>依然采用了这种算法，我个人认为原因是实现简单，而且网络中数据出错的概率不高，而多处出错并相互抵消的概率就更小了，所以这种算法的可靠性还是比较高的。</p>
+<br>
+
+<h3 id="emsp-2-3-TCP解决丢包问题"><a href="#emsp-2-3-TCP解决丢包问题" class="headerlink" title="&emsp;2.3 TCP解决丢包问题"></a>&emsp;2.3 TCP解决丢包问题</h3><p>&emsp;&emsp;<code>TCP</code>解决数据丢失的方法就是<strong>超时重传</strong>。<code>TCP</code>将维护一个计时器，并设置一个超时时间，当发送一个<code>TCP</code>报文段后，没有在超时时间之内得到ACK报文，则发送方将认为数据丢失，于是将重传丢失的报文段，直至接收。由于<code>TCP</code>使用的是<strong>流水线传输</strong>，在同一时间内，可能有多个已经发送但没有接收到<code>ACK</code>的报文段，所以按理来讲，<code>TCP</code>将维护多个计时器，为每一个报文段绑定一个，但是这样做将产生较大的开销，而且对于计时器的管理也很复杂。所以在<code>TCP</code>中，实际上只会维护一个计时器，记录的是当前最早被发送，但是还没有接收到<code>ACK</code>报文的报文段。当这个报文段超时，发送方将重传报文段，并重启计时器；若收到这个报文段的<code>ACK</code>报文，同样重启计时器，不过此时最早被发出但还没有被确认的报文段已经发生了改变，此时记录的就是这个新的报文段的传输时间。除此之外，触发<strong>快速重传</strong>时，计时器也会重新启动。关于<code>TCP</code>的流水线传输，可以参考我的这一篇博客：<a href="https://www.cnblogs.com/tuyang1129/p/12450978.html" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12450978.html</a>。</p>
+<p>&emsp;&emsp;这里就有一个复杂的问题了，这个超时时间将要如何设定？不难想到，这个超时时间应该要略大于数据的往返时间（RTT），比如数据从发送到接收到<code>ACK</code>报文，共用了<code>200ms</code>，那超时时间应该略大于这个值，比如<code>400ms</code>。但是网络是不稳定的，对于每一个报文，因为所通过的路径不同，网络拥塞程度的不同，往返时间或多或少都会发生改变。所以对于这个超时时间，应该基于平均RTT进行计算。但是直接统计求平均值就太粗糙了，对于<code>TCP</code>来说，有一套复杂的算法来计算这个超时时间。</p>
+<p>&emsp;&emsp;要计算<code>RTT</code>的大致平均值，首先得有样本值，假设<strong>样本RTT</strong>定义为<code>SampleRTT</code>。<code>TCP</code>程序在运行期间，可能会在任意时刻测量一次<code>SampleRTT</code>，即测量一个报文从发出到接收<code>ACK</code>所用的时间，然后将它用于计算<code>RTT</code>的加权平均值。然后过一段时间再进行一次，并将新测出的<code>SampleRTT</code>用于更新加权平均值。假设这个加权平均值<code>RTT</code>定义为<code>EstimatedRTT</code>，在<code>TCP</code>规范中，计算<code>EstimatedRTT</code>的公式为：</p>
+<p><strong><code>EstimatedRTT = （1- α）*EstimatedRTT + α * SampleRTT</code></strong>（公式一）</p>
+<p>&emsp;&emsp;其中<code>SampleRTT</code>就是最新测得的样本<code>RTT</code>，通过以上公式就能动态地确定<code>RTT</code>的加权平均值。由于越晚测量的<code>SampleRTT</code>，越接近网络中当前的状况，所以在更新<code>EstimatedRTT</code>的过程中，最新的<code>SampleRTT</code>应该要占据更多的比重，所以在<code>TCP</code>规范中，建议将<code>α</code>的值设定为<code>1/8</code>，所以上面的公式就是：</p>
+<p><strong><code>EstimatedRTT = 0.875 * EstimatedRTT + 0.125 * SampleRTT</code></strong></p>
+<p>&emsp;&emsp;而<code>SampleRTT</code>与<code>EstimatedRTT</code>的波动图如下所示：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200310210046405-1582185603.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;除了求<code>RTT</code>的加权平均值，网络中<code>RTT</code>的变化情况也是很有必要的，毕竟从上图可以看出，样本<code>RTT</code>的波动十分剧烈，只有<code>EstimatedRTT</code>，还不足以让我们准确的估算超时时间。所以我们需要求出<code>SampleRTT</code>与<code>EstimatedRTT</code>的偏离程度，也就是类似于<strong>方差</strong>，根据方差，来动态地设置超时时间。假设这个方差定义为<code>DevRTT</code>，则<code>TCP</code>规范中定义<code>DevRTT</code>的计算公式如下：</p>
+<p><strong><code>DevRTT = （1 - β）* DevRTT + β * | SampleRTT - EstimatedRTT |</code></strong>（公式二）</p>
+<p>&emsp;&emsp;由上面公式可以看出，如果<code>SampleRTT</code> 的波动很大，<code>DevRTT</code>的值就会很大，反之就会很小。而在<code>TCP</code>规范中<code>β</code>的推荐值是<code>0.25</code>。我们现在知道了<code>RTT</code>的加权平均值，也知道了<code>RTT</code>的波动情况，现在就该考虑怎么设置超时时间了。不难想到，超时时间应该需要比<code>RTT</code>的加权平均值，也就是<code>EstimatedRTT</code>要大一些，让大部分报文段的<code>RTT</code>都小于这个值，以免频繁超时重传。那应该大多少呢？这样考虑，当网络波动较为剧烈时，表示实际<code>RTT</code>应该会离<code>EstimatedRTT</code>远一些，而波动较小时，实际<code>RTT</code>应该会接近于<code>EstimatedRTT</code>，而这个波动情况的数值，我们已经计算过了，就是上一个公式中的<code>DevRTT</code>，所以假设超时时间定义为<code>TimeoutInterval</code>，<code>TCP</code>规范推荐使用以下方式来计算它的值：</p>
+<p><strong><code>TimeoutInterval = EstimatedRTT  + 4 * DevRTT</code></strong>（公式三）</p>
+<p>&emsp;&emsp;这样，不论是加权平均值还是网络的波动情况就都考虑到了。而<code>TCP</code>规范中推荐的初始<code>TimeoutInterval</code>为<code>1s</code>（当时从书上看到这部分内容，才深刻体会到了数学的强大，真真的将理论应用于实际）。当然，对于超时时间的计算，还有两个特例：</p>
+<ul>
+<li>当某个报文段超时，发送方将重传这个报文段，同时重新开启定时器，而超时时间将会设置为上一次的<strong>两倍</strong>，而不是使用公式三计算的值；若还是超时，则继续重传，超时时间再次扩大两倍，直到这个报文被成功接收，而成功接收时，才使用公式三重新计算超时时间。这么做的目的是为了防止多次超时导致连续重传，从而导致网络拥塞更加严重，毕竟超时就是网络拥塞的结果。</li>
+<li>记录样本<code>RTT</code>时，不会选择重传的报文段作为样本，这是因为，当发生超时事件时，发送方并不知道数据是因为丢失还是因为网络延迟而超时。若报文段是因为延迟而超时，则重传报文后，这时延迟的<code>ACK</code>报文到达，发送方将误以为重传的分组被正确接收，于是将测出一个错误的<code>SampleRTT</code> 。</li>
+</ul>
+<p>&emsp;&emsp;总之，<code>TCP</code>的超时重传机制，很好地解决了网络中发生数据丢包的问题。而且，为了提高效率，<code>TCP</code>还有一种<strong>快速重传</strong>机制，可以根据特定情况，在超时前就判断报文段丢失，然后进行重传，不过这里就不详细叙述了。</p>
+<br>
+
+<h3 id="emsp-2-4-TCP如何解决数据乱序到达"><a href="#emsp-2-4-TCP如何解决数据乱序到达" class="headerlink" title="&emsp;2.4 TCP如何解决数据乱序到达"></a>&emsp;2.4 TCP如何解决数据乱序到达</h3><p>&emsp;&emsp;第三个问题就是数据的乱序到达问题。由于网络的限制，<code>TCP</code>必须将较大的数据拆分成一个个较小的报文段，封装成<code>TCP</code>报文段，逐个传输。由于网络传输的不确定性（比如所通过的路径不同，某个报文段丢失然后重传等），这些报文段完全有可能不是按照顺序到达。所以，为了在接收方能够完整的接收数据，并能按序将这些报文组合起来，<code>TCP</code>必须有一种机制解决这个问题。</p>
+<p>&emsp;&emsp;<code>TCP</code>所使用的方法就是为每一个<code>TCP</code>报文段分配一个序号，每个报文段的序号依次增加，这样接收方就可以根据序号，来确定接收到的报文段是整个数据中的哪一部分，以及是否接收到了所有的部分。从上面那张<code>TCP</code>报文结构图中我们可以看到，其中有一个<code>32位</code>的序号字段。但是，<code>TCP</code>对报文段的编号可不是<code>0，1，2，3</code>….这么简单，下面我们就来说说<code>TCP</code>是如何实现这种序号机制的。</p>
+<p>&emsp;&emsp;首先我们要明确一个点，<strong>TCP是对字节进行编号，而不是对报文段进行编号</strong>。<code>TCP</code>对需要发送的数据的每一个字节都赋予了一个编号，比如第一个字节为<code>0</code>号，第二个为<code>1</code>号，以此类推。而每一个报文段一般都不止封装一个字节的数据，所以在<code>TCP</code>报文段中，封装的是这个报文段的数据中，第一个字节的序号。举个例子，比如说发送方要发送<code>250</code>字节的数据，假设初始序号从<code>0</code>开始，则这<code>250</code>个字节的序号分别是<code>0-249</code>。再假设每一个报文段最多允许封装<code>100</code>个字节的数据，所以第一个报文段将封装第<code>1</code>到<code>100</code>个字节，这些字节的序号为<code>0-99</code>，所以第一个报文段会将<code>0</code>放入它首部中的序号部分；而第二个报文段封装<code>100-199</code>号字节，所以它的序号为<code>100</code>；而第三个报文段封装<code>200-249</code>号字节，所以它的序号为<code>200</code>。以上就是<code>TCP</code>发送方对序号的处理方法。</p>
+<p>&emsp;&emsp;下面来说一说<code>TCP</code>的接收方如何在这种序号机制中工作。同样以上面三个报文段举例，假设发送方将上面三个报文段发出，接收方接收到第一个报文段，发现这个报文的序号是<code>0</code>，同时包含<code>100</code>个字节的数据，于是接收方将会向发送方确认已经接收到这个报文，而确认的方式就是使用<code>TCP</code>首部中的<strong>确认序号</strong>字段。接收方接收到序号为<code>0</code>，长度为<code>100</code>个字节的报文段后，将会在<code>ACK</code>报文的确认序号中填入<code>100</code>，表示自己已经接收到序号小于<code>100</code>的全部字节，希望下一个接收到的报文段的序号是<code>100</code>；而第二个报文段按序到达，序号为<code>100</code>，长度为<code>100</code>字节，于是接收方再次回送<code>ACK</code>报文，此时确认序号将为<code>200</code>，表示自己接收到<code>200</code>以前的全部字节，希望下一条报文的序号是<code>200</code>；然后接收到序号为<code>200</code>，长度为<code>50</code>字节的报文段，将回送确认序号为<code>250</code>的ACK报文。</p>
+<p>&emsp;&emsp;以上是按顺序接收到报文段的情况，假设在上面的情况中，三条报文到达的先后顺序是0 -&gt; 200 -&gt; 100，也就是顺序被打乱，则将发生以下情况：</p>
+<ol>
+<li>接收方接收到序号<code>0</code>，长度<code>100</code>字节的报文段，回送确认号为<code>100</code>的<code>ACK</code>报文；</li>
+<li>接收到序号<code>200</code>，长度为<code>50</code>字节 的报文段，此时接收方希望接收到的是<code>100</code>号报文，于是判断发生了乱序到达的情况，不向上层交付这一段数据，而是将其放入接收缓存；</li>
+<li>接收到序号为<code>100</code>，长度为<code>100</code>的报文段，<code>100</code>正是接收方期待接收到的报文段序号，于是将其接收并交付给上层，同时发现在接收缓存中存在序号为<code>200</code>的报文段，这正是接收方期待接收到的下一条报文，于是将其取出，交付上层，同时向发送方发送<code>ACK</code>报文，<code>ACK</code>的确认序号为<code>250</code>，表示自己已经接收到<code>250</code>之前的所有字节，下一条期望到达的报文的序号是<code>250</code>；</li>
+</ol>
+<p>&emsp;&emsp;通过上面的机制，接收方成功解决了数据乱序到达的问题。当然，对于这种序号机制的使用，其实不止这么简单，这其中还牵涉到TCP的流水线传输机制，若想要了解，可以参考我的另外一篇博客——<a href="https://www.cnblogs.com/tuyang1129/p/12450978.html&gt;。" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12450978.html&gt;。</a></p>
+<p>&emsp;&emsp;这里还有一个问题，在上面的例子中，我假设序号是从<code>0</code>开始，但是实际情况并非如此。在实际的实现中，序号一般是一个通过特殊算法计算出的随机值，这样做的原因有两点：</p>
+<ol>
+<li>假设每一个<code>TCP</code>连接的序号都是从<code>0</code>开始，那么假设客户端先向服务器发送了一个报文，还没有确认接收后，立即断开连接；但是在断开后，它们立刻又建立了一个连接，而此时，第一次发送出去的报文段才刚到达服务器，那会发生什么情况。服务器会以为这是新建立的连接发送的数据，而由于两次连接的初始序号都是<code>0</code>，接收方将会把这个报文段接收。为了减小类似情况发生的概率，<code>TCP</code>采用随机初始序号，这样两次连接的初始序号将大概率不同，再发生这种情况时，接收方也不会接收这个报文段；</li>
+<li>第二个原因就是出于安全性考虑，若初始序号都是固定的，那每一个报文段的序号完全可以推测得出，于是就有黑客可以利用这一点，模拟发送方发送TCP报文，做出攻击，比如发送大量连接请求，占用服务器资源；</li>
+</ol>
+<br>
+
+<h3 id="emsp-2-5-TCP的流量控制与拥塞控制"><a href="#emsp-2-5-TCP的流量控制与拥塞控制" class="headerlink" title="&emsp;2.5 TCP的流量控制与拥塞控制"></a>&emsp;2.5 TCP的流量控制与拥塞控制</h3><p>&emsp;&emsp;流量控制与拥塞控制，严格来讲并不是<code>TCP</code>的可靠传输机制，但是也算是有点关系，所以我还是提一下。</p>
+<ul>
+<li>流量控制：<code>TCP</code>的接收方会维持一个接收缓存，用以接收发送方发送的数据。但是，接收缓存不是无限大的，若接收缓存被占满，此时再接收到数据，将无法进行接收，只能将其丢弃。于是，为了减少这种情况的发生，<code>TCP</code>接收方需要告知发送方，自己最多还能接收多少数据，<code>TCP</code>发送方根据这个信息，有选择的发送数据，这就是流量控制；</li>
+<li>拥塞控制：和流量控制类似，但是限制发送数据多少的不是接收方，而是路由器。路由器也有接收缓存，若路由器的接收缓存中存在过多的数据，也会对网络传输造成影响，这就是网络中丢包的原因，而拥塞控制就是根据网络的拥塞状况控制发送数据的速度；</li>
+</ul>
+<p>&emsp;&emsp;这两种机制中，流量控制相对简单。我们可以看到，在<code>TCP</code>的报文格式中，有一个叫做窗口大小的部分，这部分就是接收方告诉发送方，自己当前最多还能接收多少数据，而发送方将发送小于这个窗口大小的数据长度。但是有一种特殊情况，若这个窗口大小为<code>0</code>，表示当前窗口已满，正常情况下发送方将无法发送数据，但是在实际情况中，发送方还是会发送<strong>一个字节</strong>的数据到接收方，作为一种试探。因为接收方一般不会主动向发送方发送报文，这个窗口大小一般是携带在<code>ACK</code>报文中，若此时窗口大小为<code>0</code>，发送方将不再发送数据，接收方也就无法向发送方发送<code>ACK</code>报文，此时就算缓存被清理，发送方也不会知晓。所以即使这个窗口大小为<code>0</code>，发送方仍然需要发送数据，进行试探，若缓存已经被清理，通过试探报文的<code>ACK</code>报文，发送方就能知晓。</p>
+<p>&emsp;&emsp;拥塞控制是<code>TCP</code>中相对复杂的一种机制，不是三言两语说的清楚的，这部分内容我专门写了一篇的博客进行说明，感兴趣的可以阅读一下：<a href="https://www.cnblogs.com/tuyang1129/p/12439862.html" target="_blank" rel="noopener">https://www.cnblogs.com/tuyang1129/p/12439862.html</a>。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;对于<code>TCP</code>可靠传输的描述就介绍到这里。上面的内容是对<code>TCP</code>可靠传输原理的基本介绍，但是具体实现可能会在这些基础上进行改进和优化。<code>TCP</code>的各种机制相辅相成，若是对于<code>TCP</code>没有太多了解，可能有些介绍会看不太懂，所以若想真正搞懂<code>TCP</code>以及其他计算机网络的相关知识，建议买一本书系统地研究。希望我的这篇博客对看到的人有所帮助，若博客内容有误，希望可以指正。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><p>&emsp;&emsp;《计算机网络——自顶向下方法（原书第七版）》</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-10T13:01:39.856Z" itemprop="dateUpdated">2020-03-10 21:01:39</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.gitee.io/blog">
+            <img src="/blog/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/blog/tags/计算机网络/">计算机网络</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&title=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&title=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/blog/计算机网络——TCP的流水线传输/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">计算机网络——TCP的流水线传输</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&title=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&pic=http://tewuyiang.gitee.io/blog/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&title=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《计算机网络——TCP如何做到可靠数据传输》 — 博客主页&url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/&via=http://tewuyiang.gitee.io/blog" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.gitee.io/blog/计算机网络——TCP如何做到可靠数据传输/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/blog/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
