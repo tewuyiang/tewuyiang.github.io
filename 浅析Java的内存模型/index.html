@@ -30,7 +30,7 @@
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;之前过年在家，空闲时间比较多，想要了解一下JVM相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲JVM最基础的内容——Java的内存模型。   二、正文&amp;emsp;2.1 Java内存分布&amp;emsp;&amp;emsp;Java的内存主要">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200315183135202-1062122208.jpg">
-<meta property="og:updated_time" content="2020-03-15T10:32:24.406Z">
+<meta property="og:updated_time" content="2020-03-15T10:35:11.137Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浅析Java的内存模型">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;之前过年在家，空闲时间比较多，想要了解一下JVM相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲JVM最基础的内容——Java的内存模型。   二、正文&amp;emsp;2.1 Java内存分布&amp;emsp;&amp;emsp;Java的内存主要">
@@ -174,7 +174,7 @@
     <aside class="post-widget">
         <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
             <h4>TOC</h4>
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-Java内存分布"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 Java内存分布</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-2-程序计数器"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">2.2 程序计数器</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-Java虚拟机栈"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 Java虚拟机栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-本地方法栈"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 本地方法栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-堆内存"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 堆内存</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-6-方法区"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.6 方法区</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-7-我们平常理解的Java内存模型"><span class="post-toc-number">2.7.</span> <span class="post-toc-text"> 2.7 我们平常理解的Java内存模型</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-Java内存分布"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 Java内存分布</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-程序计数器"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 程序计数器</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-Java虚拟机栈"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 Java虚拟机栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-本地方法栈"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 本地方法栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-堆内存"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 堆内存</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-6-方法区"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.6 方法区</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-7-我们平常理解的Java内存模型"><span class="post-toc-number">2.7.</span> <span class="post-toc-text"> 2.7 我们平常理解的Java内存模型</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
         </nav>
     </aside>
 
@@ -222,7 +222,7 @@
 
 <br>
 
-<h3 id="2-2-程序计数器"><a href="#2-2-程序计数器" class="headerlink" title="2.2 程序计数器"></a>2.2 程序计数器</h3><p>&emsp;&emsp;首先看第一部分——<strong>程序计数器</strong>。上过计算机组成原理的可能都听过这个名词，也大概知道它的作用是指向下一条需要执行的计算机指令，而在<code>JVM</code>中，程序计数器的作用也是类似。</p>
+<h3 id="emsp-2-2-程序计数器"><a href="#emsp-2-2-程序计数器" class="headerlink" title="&emsp;2.2 程序计数器"></a>&emsp;2.2 程序计数器</h3><p>&emsp;&emsp;首先看第一部分——<strong>程序计数器</strong>。上过计算机组成原理的可能都听过这个名词，也大概知道它的作用是指向下一条需要执行的计算机指令，而在<code>JVM</code>中，程序计数器的作用也是类似。</p>
 <p>&emsp;&emsp;程序计数器是<code>JVM</code>中较小的一块内存空间，它的作用是<strong>记录下一条需要执行的字节码指令的地址</strong>（<code>Java</code>代码编译后的字节码在未经过实时编译器编译前，其执行方式是通过“字节码解释器”进行解释执行）。在<code>JVM</code>的概念模型里，就是通过改变这个计数器的值来辅助程序的执行。选择，循环，方法调用，异常处理等功能都需要通过程序计数器的辅助来完成。</p>
 <p>&emsp;&emsp;<code>JVM</code>的多线程和<code>CPU</code>的多线程处理类似，都是使用<strong>时间片轮转</strong>的方式来执行各个线程，即每个线程轮流得到一个时间片，执行完这个时间片后，等待下一次调度，而每次只有一个线程在执行。正因为如此，线程在调度后，为了能够恢复到这个线程上一次执行的位置，就需要程序计数器的帮助，让程序计数器来告知下一条需要执行的指令的地址，对于每一个线程都是如此。所以，<code>JVM</code>中的程序计数器是<strong>线程私有</strong>的，即每一个线程都有一个独立的程序计数器，辅助当前线程的运行，各个线程之间互不影响。</p>
 <p>&emsp;&emsp;如果当前<code>JVM</code>执行的是一个<code>Java</code>方法，则程序计数器的值就是正在执行的字节码指令的地址；若当前执行的是一个本地方法（如<code>Object</code>的<code>hashcode</code>方法），则程序计数器的值为空（<code>Undefined</code>），因为本地方法并不会被加载到<code>JVM</code>的内存空间中。</p>
@@ -267,7 +267,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-03-15T10:32:24.406Z" itemprop="dateUpdated">2020-03-15 18:32:24</time>
+    最后更新时间：<time datetime="2020-03-15T10:35:11.137Z" itemprop="dateUpdated">2020-03-15 18:35:11</time>
 </span><br>
 
 
