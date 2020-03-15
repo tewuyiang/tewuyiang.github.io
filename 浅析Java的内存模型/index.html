@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>浅析Java的内存模型 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JVM">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;之前过年在家，空闲时间比较多，想要了解一下JVM相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲JVM最基础的内容——Java的内存模型。   二、正文&amp;emsp;2.1 Java内存分布&amp;emsp;&amp;emsp;Java的内存主要">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅析Java的内存模型">
+<meta property="og:url" content="http://tewuyiang.github.io/浅析Java的内存模型/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;之前过年在家，空闲时间比较多，想要了解一下JVM相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲JVM最基础的内容——Java的内存模型。   二、正文&amp;emsp;2.1 Java内存分布&amp;emsp;&amp;emsp;Java的内存主要">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200315183135202-1062122208.jpg">
+<meta property="og:updated_time" content="2020-03-15T10:32:24.406Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅析Java的内存模型">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;之前过年在家，空闲时间比较多，想要了解一下JVM相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲JVM最基础的内容——Java的内存模型。   二、正文&amp;emsp;2.1 Java内存分布&amp;emsp;&amp;emsp;Java的内存主要">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200315183135202-1062122208.jpg">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">浅析Java的内存模型</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">浅析Java的内存模型</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-15T07:35:34.000Z" itemprop="datePublished" class="page-time">
+  2020-03-15
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-Java内存分布"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 Java内存分布</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-2-程序计数器"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">2.2 程序计数器</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-Java虚拟机栈"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 Java虚拟机栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-本地方法栈"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 本地方法栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-堆内存"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 堆内存</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-6-方法区"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.6 方法区</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-7-我们平常理解的Java内存模型"><span class="post-toc-number">2.7.</span> <span class="post-toc-text"> 2.7 我们平常理解的Java内存模型</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-浅析Java的内存模型"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">浅析Java的内存模型</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-15 15:35:34" datetime="2020-03-15T07:35:34.000Z"  itemprop="datePublished">2020-03-15</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;之前过年在家，空闲时间比较多，想要了解一下<code>JVM</code>相关的内容，于是买了《深入理解Java虚拟机》这本书，过了一遍其中的基础知识。时隔多日，都忘得差不多了。为了重新捡起来，我决定复习一遍，并编写相关的系类博文加深印象，这是第一篇，来讲一讲<code>JVM</code>最基础的内容——<code>Java</code>的内存模型。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-Java内存分布"><a href="#emsp-2-1-Java内存分布" class="headerlink" title="&emsp;2.1 Java内存分布"></a>&emsp;2.1 Java内存分布</h3><p>&emsp;&emsp;<code>Java</code>的内存主要分为五个部分：</p>
+<ol>
+<li>程序计数器；</li>
+<li><code>Java</code>虚拟机栈；</li>
+<li>本地方法栈；</li>
+<li>堆内存；</li>
+<li>方法区；</li>
+</ol>
+<p>&emsp;&emsp;具体结构如下图所示：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200315183135202-1062122208.jpg" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<h3 id="2-2-程序计数器"><a href="#2-2-程序计数器" class="headerlink" title="2.2 程序计数器"></a>2.2 程序计数器</h3><p>&emsp;&emsp;首先看第一部分——<strong>程序计数器</strong>。上过计算机组成原理的可能都听过这个名词，也大概知道它的作用是指向下一条需要执行的计算机指令，而在<code>JVM</code>中，程序计数器的作用也是类似。</p>
+<p>&emsp;&emsp;程序计数器是<code>JVM</code>中较小的一块内存空间，它的作用是<strong>记录下一条需要执行的字节码指令的地址</strong>（<code>Java</code>代码编译后的字节码在未经过实时编译器编译前，其执行方式是通过“字节码解释器”进行解释执行）。在<code>JVM</code>的概念模型里，就是通过改变这个计数器的值来辅助程序的执行。选择，循环，方法调用，异常处理等功能都需要通过程序计数器的辅助来完成。</p>
+<p>&emsp;&emsp;<code>JVM</code>的多线程和<code>CPU</code>的多线程处理类似，都是使用<strong>时间片轮转</strong>的方式来执行各个线程，即每个线程轮流得到一个时间片，执行完这个时间片后，等待下一次调度，而每次只有一个线程在执行。正因为如此，线程在调度后，为了能够恢复到这个线程上一次执行的位置，就需要程序计数器的帮助，让程序计数器来告知下一条需要执行的指令的地址，对于每一个线程都是如此。所以，<code>JVM</code>中的程序计数器是<strong>线程私有</strong>的，即每一个线程都有一个独立的程序计数器，辅助当前线程的运行，各个线程之间互不影响。</p>
+<p>&emsp;&emsp;如果当前<code>JVM</code>执行的是一个<code>Java</code>方法，则程序计数器的值就是正在执行的字节码指令的地址；若当前执行的是一个本地方法（如<code>Object</code>的<code>hashcode</code>方法），则程序计数器的值为空（<code>Undefined</code>），因为本地方法并不会被加载到<code>JVM</code>的内存空间中。</p>
+<br>
+
+<h3 id="emsp-2-3-Java虚拟机栈"><a href="#emsp-2-3-Java虚拟机栈" class="headerlink" title="&emsp;2.3 Java虚拟机栈"></a>&emsp;2.3 Java虚拟机栈</h3><p>&emsp;&emsp;虚拟机栈和程序计数器一样，也是<strong>线程私有</strong>的。<strong>Java虚拟栈是Java方法执行时需要依赖的内存空间</strong>，这个栈中的元素被称为<strong>栈帧</strong>。栈帧可以理解为一个对象，它记录了一个方法的局部变量表，操作数栈，动态链接，方法出口等信息。<strong>每一个方法对应一个栈帧，而每一个方法从执行到返回，就对应着它所属的栈帧从入栈到出栈的过程</strong>，即当一个<code>Java</code>方法被调用，<code>JVM</code>就会创建这个方法的栈帧，并将它加入的虚拟机栈中，执行结束后才会出栈。对于<code>JVM</code>来说，<strong>正在执行的是虚拟机栈栈顶的栈帧所对应的方法</strong>，这个栈帧被称为<strong>当前栈帧</strong>，栈帧对应的方法被称为<strong>当前方法</strong>。</p>
+<p>&emsp;&emsp;下面我来简单介绍一下栈帧最重要的两个部分：</p>
+<ul>
+<li><strong>局部变量表</strong>：局部变量表是用来存放方法的<strong>参数</strong>以及在方法中定义的<strong>局部变量</strong>，它的大小在编译期间就被确定，并写入到<code>class</code>文件中。若一个变量是基本数据类型，则在局部变量表中存放的就是这个变量的具体值；若是引用类型，存放的则是这个变量所引用对象的地址。局部变量表的最小单位是变量槽（<code>Slot</code>），对于<code>double</code>和<code>long</code>类型的变量，在局部变量中需要占用两个单位，其他类型只需要占用一个单位。</li>
+<li><strong>操作数栈</strong>：从名字可以看出，这是一个栈<code>Stack</code>，它存放的是：<strong>方法运行时需要用到的操作数</strong>。和局部变量表一样，它的最大深度也是在编译期间就被计算好，并被写入<code>class</code>文件中的。在一个方法刚准备运行前，它是空的，而在运行的过程中，不断的有操作数被入栈和出栈（比如假设方法中需要计算<code>num = 1 + 2</code>，则在这条语句执行时，<code>1</code>和<code>2</code>被入栈，然后被取出，计算出<code>3</code>存入栈中，再将<code>3</code>取出赋值给<code>num</code>），程序的计算都需要依靠这个栈进行。操作数栈可以存放任意类型的数据（基本数据类型和引用类型，引用类型存放的是地址），而<code>double</code>和<code>long</code>类型将占用两个单位，其余类型占用一个单位。</li>
+</ul>
+<p>&emsp;&emsp;在虚拟机规范中规定，若线程的虚拟机栈的深度超过了<code>JVM</code>允许的最大深度，将抛出<code>StackOverflowError</code>（比如调用没有出口的递归方法）；若<code>JVM</code>实现的虚拟机栈可以动态扩展，则如果在扩展时没有申请到足够的内存，将抛出<code>OutOfMemoryError</code>异常。</p>
+<br>
+
+<h3 id="emsp-2-4-本地方法栈"><a href="#emsp-2-4-本地方法栈" class="headerlink" title="&emsp;2.4 本地方法栈"></a>&emsp;2.4 本地方法栈</h3><p>&emsp;&emsp;本地方法栈的作用和虚拟机栈相同，不同的是，<strong>虚拟机栈是辅助Java方法的运行，而本地方法栈是辅助本地方法的运行</strong>。在虚拟机规范中，并没有规定实现本地方法栈使用的语言，数据结构以及使用方式，所以<code>JVM</code>可以自由地实现它。与虚拟机栈一样，这一块内存区域也可能抛出<code>StackOverflowError</code>和<code>OutOfMemoryError</code>异常，同时也是<strong>线程私有</strong>。</p>
+<br>
+
+<h3 id="emsp-2-5-堆内存"><a href="#emsp-2-5-堆内存" class="headerlink" title="&emsp;2.5 堆内存"></a>&emsp;2.5 堆内存</h3><p>&emsp;&emsp;这一块内存是<code>JVM</code>中最大，可能也是最重要的一块内存，而堆存在的唯一目的就是<strong>存放实例对象</strong>，几乎所有的对象都是在堆中分配内存。和之前所说的几块内存不同，堆内存是所有的<strong>线程共享</strong>的，它在<strong>虚拟机启动时被创建</strong>。</p>
+<p>&emsp;&emsp;堆内存是垃圾回收的主要区域，从内存回收的角度看，现在的垃圾回收机制一般都是<strong>分代收集</strong>，所以堆内存可以被分为新生代和老年代。新生代用来存放生命周期短的对象，这一块区域将频繁进行垃圾回收；老年代用来存放生命周期长的对象（或者在新生代内存不足时代替新生代存放对象），所以垃圾回收的频率较低，甚至不进行垃圾回收。</p>
+<p>&emsp;&emsp;根据<code>Java</code>虚拟机规范规定，堆可以是不连续的内存空间，只需要逻辑上连续即可。在实现虚拟机时，可以将堆实现为固定大小，也可以实现为可扩展的，当前的虚拟机一般都是采用可扩展的方式（可以通过配置参数来改变堆的大小）。如果堆中的内存被占满，实例对象无法存入，且堆无法再进行扩展时，将抛出<code>OutOfMemaryError</code>异常。</p>
+<br>
+
+<h3 id="emsp-2-6-方法区"><a href="#emsp-2-6-方法区" class="headerlink" title="&emsp;2.6 方法区"></a>&emsp;2.6 方法区</h3><p>&emsp;&emsp;和堆一样，方法区也是<strong>线程共享</strong>的，它的作用是存放类信息，常量，静态常量等内容。<code>Java</code>虚拟机规范对这一块区域的限制非常宽松，方法区可以选择实现为固定的或者可扩展的，也可以选择是否实现垃圾回收。方法区中的数据，很少会发生改变，所以虚拟机规范并不强制要求在此区域实现垃圾回收。这块区域进行垃圾回收的主要目的就是卸载已经不需要使用的类，但是类卸载的条件是非常苛刻的。</p>
+<p>&emsp;&emsp;在方法区中有一块内存区域，叫做<strong>运行时常量池</strong>，它的作用就是<strong>存储编译期字面量以及符号引用</strong>。在一个类中如果定义了常量，或使用了字面量（如直接使用字符串为变量赋值，<code>String str = ”aaa“</code>），则在编译之后，会被放入到<code>class</code>文件的常量池中（<code>class</code>文件有一个常量池部分），同时，类编译后的符号引用也会被放入常量池。当程序运行时，<code>class</code>中的内容被加载到方法区中，而其中常量池的内容会被放入运行时常量池里面，被所有的类共享。运行时常量池是一个动态的内存区域，可以在程序运行时，动态的为其中添加数据，比如<code>String</code>类的<code>intern()</code>方法。因为运行时常量池是方法区的一部分，所以它的大小受到方法区的限制，当无法在其中申请空间时，将抛出<code>OutOfMemaryError</code>异常。</p>
+<br>
+
+<h3 id="emsp-2-7-我们平常理解的Java内存模型"><a href="#emsp-2-7-我们平常理解的Java内存模型" class="headerlink" title="&emsp;2.7 我们平常理解的Java内存模型"></a>&emsp;2.7 我们平常理解的Java内存模型</h3><p>&emsp;&emsp;我们在学习<code>Java</code>的过程中，经常会看到这样的内容：<code>Java</code>的内存分为两部分，即栈内存和堆内存，栈内存中存放基本数据类型以及对象引用，而堆内存中存放对象。</p>
+<p>&emsp;&emsp;以上是对<code>Java</code>内存模型的片面描述，只关注了程序员最重视的部分。在上面的描述中，栈内存指的就是本地方法栈中，局部变量表的部分；而堆内存就是<code>Java</code>中的堆了。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;以上内容对<code>Java</code>的内存模型进行了一个简单的描述，讨论了每一个部分的基本作用，了解了上面的内容后，再遇到<code>Java</code>内存方面的问题，也能更好地找出错误的所在。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《深入理解Java虚拟机》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-15T10:32:24.406Z" itemprop="dateUpdated">2020-03-15 18:32:24</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析Java的内存模型/&title=《浅析Java的内存模型》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析Java的内存模型/&title=《浅析Java的内存模型》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析Java的内存模型/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《浅析Java的内存模型》 — 博客主页&url=http://tewuyiang.github.io/浅析Java的内存模型/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析Java的内存模型/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/计算机网络——TCP如何做到可靠数据传输/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">计算机网络——TCP如何做到可靠数据传输</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析Java的内存模型/&title=《浅析Java的内存模型》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析Java的内存模型/&title=《浅析Java的内存模型》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析Java的内存模型/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《浅析Java的内存模型》 — 博客主页&url=http://tewuyiang.github.io/浅析Java的内存模型/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析Java的内存模型/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.github.io/浅析Java的内存模型/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
