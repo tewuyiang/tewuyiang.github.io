@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Java中的垃圾回收算法详解 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JVM">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写JVM的系列博客，这是第二篇。这篇博客就来谈一谈JVM中使用到的垃圾回收算法。   二、正文&amp;emsp;2.1 什么是垃圾回收&amp;emsp;&amp;emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java中的垃圾回收算法详解">
+<meta property="og:url" content="http://tewuyiang.github.io/浅析Java中的垃圾回收算法/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写JVM的系列博客，这是第二篇。这篇博客就来谈一谈JVM中使用到的垃圾回收算法。   二、正文&amp;emsp;2.1 什么是垃圾回收&amp;emsp;&amp;emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//1.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//2.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//3.png">
+<meta property="og:updated_time" content="2020-03-16T16:44:24.694Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java中的垃圾回收算法详解">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写JVM的系列博客，这是第二篇。这篇博客就来谈一谈JVM中使用到的垃圾回收算法。   二、正文&amp;emsp;2.1 什么是垃圾回收&amp;emsp;&amp;emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比">
+<meta name="twitter:image" content="http://tewuyiang.github.io/.io//1.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Java中的垃圾回收算法详解</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Java中的垃圾回收算法详解</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-16T14:21:40.000Z" itemprop="datePublished" class="page-time">
+  2020-03-16
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是垃圾回收"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是垃圾回收</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-如何识别垃圾"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 如何识别垃圾</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-如何释放垃圾"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 如何释放垃圾</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-浅析Java中的垃圾回收算法"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Java中的垃圾回收算法详解</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-16 22:21:40" datetime="2020-03-16T14:21:40.000Z"  itemprop="datePublished">2020-03-16</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写<code>JVM</code>的系列博客，这是第二篇。这篇博客就来谈一谈<code>JVM</code>中使用到的垃圾回收算法。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-什么是垃圾回收"><a href="#emsp-2-1-什么是垃圾回收" class="headerlink" title="&emsp;2.1 什么是垃圾回收"></a>&emsp;2.1 什么是垃圾回收</h3><p>&emsp;&emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比如不再使用的类以及常量，但主要还是指对象，所以以下算法将介绍对象的回收。所以垃圾回收的含义就是：<strong>将内存中已经不会被使用的对象（或类和常量）清除，释放内存空间</strong>。</p>
+<p>&emsp;&emsp;<code>JVM</code>的内存模型分为五个部分，其中<strong>堆内存</strong>的唯一目的就是存放对象，对象也基本上都是存放在<strong>堆内存</strong>中。堆中，为了方便进行垃圾回收，一般会将内存分为两个部分：</p>
+<ul>
+<li><strong>新生代</strong>：用来存放生命周期短的对象。由于这一块内存中的对象存活时间较短，所以频繁发生垃圾回收，而且每次回收一般都能释放大量空间；</li>
+<li><strong>老年代</strong>：用来存放生命周期长的对象。新生代中存活了较长时间的对象会被迁移到这里（当然，对象进入老年代不仅仅只有这一个方法），所以这里存放的对象生命周期一般较长，所以这一块区域发生垃圾回收的频率较低，释放的空间也较少；</li>
+</ul>
+<p>&emsp;&emsp;下面正式开始讨论<code>JVM</code>中的垃圾回收算法。</p>
+<br>
+
+<h3 id="emsp-2-2-如何识别垃圾"><a href="#emsp-2-2-如何识别垃圾" class="headerlink" title="&emsp;2.2 如何识别垃圾"></a>&emsp;2.2 如何识别垃圾</h3><p>&emsp;&emsp;进行垃圾回收的第一步就是找到垃圾（我们这里主要以对象为例），也就是无法被使用的对象。对象在什么情况下无法被使用？很简单，没有引用指向这个对象，我们自然无法使用它，比如看下面这段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    Object a = <span class="keyword">new</span> Object();</span><br><span class="line">    a = <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面的代码中，我创建了一个对象，并使用变量<code>a</code>指向这个对象，但是在这之后，我又将<code>null</code>赋给了<code>a</code>，这会出现什么情况？不难发现，我们已经无法使用这个对象了，它已经丢失了，因为我们已经无法通过任何变量去调用这个对象，但是它依然在内存中。此时，这个对象占用着内存就是白白浪费资源，我们希望它被清除。所以，我们可以想到，当一个对象没有引用指向它时，就可以认为他是一个垃圾对象了。</p>
+<p>&emsp;<strong>（1）引用计数法</strong></p>
+<p>&emsp;&emsp;引用计数法就是通过引用来识别无用对象。我们记录每一个对象的引用个数，若有新的变量引用一个对象时，这个对象的引用个数加1；若一个引用失效时，引用的个数减1，而引用个数为0的对象，即可作为垃圾被回收。这里要注意，若这些垃圾对象的成员变量引用了其他对象，则当垃圾对象被释放时，它的这个引用自然就失效了。</p>
+<p>&emsp;&emsp;这个算法实现简单，效率也高，但是，它并没有被用在主流的<code>Java</code>虚拟机中，因为它有一个很大的缺陷——很难解决<strong>循环引用</strong>的问题。什么是循环引用，看下面一段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> Object obj;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Main m1 = <span class="keyword">new</span> Main();</span><br><span class="line">        Main m2 = <span class="keyword">new</span> Main();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 循环引用</span></span><br><span class="line">        m1.obj = m2;</span><br><span class="line">        m2.obj = m1;</span><br><span class="line"></span><br><span class="line">        m1 = <span class="keyword">null</span>;</span><br><span class="line">        m2 = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面这段代码中，创建了两个对象<code>m1</code>和<code>m2</code>，它们都有一个属性<code>obj</code>。而<code>m1</code>的<code>obj</code>指向了<code>m2</code>，而<code>m2</code>的<code>obj</code>指向了<code>m1</code>。多个引用形成一个环，这就是循环引用。这对于使用引用计数算法的垃圾回收器来说有一个问题，即上面的代码最后，<code>m1</code>和<code>m2</code>都置为了空，它们指向的两个对象已经无法再使用了，但是由于这两个对象相互引用，导致它们的引用计数并不为<code>0</code>，所以垃圾回收器不会将它们判别为无用对象。正是因为这个问题的存在，<code>Java</code>中的垃圾回收器基本上不使用这个算法。</p>
+<p>&emsp;<strong>（2）可达性分析法</strong></p>
+<p>&emsp;&emsp;可达性分析法是<code>Java</code>垃圾回收中判别无用对象的主要方法。这个方法的步骤是，从根节点对象出发，使用<code>DFS</code>或<code>BFS</code>算法，沿着引用递归遍历，而无法被遍历到的对象，就是无法再被使用的对象，可以被垃圾回收器回收。所谓的根节点，就是我们能够直接使用的引用类型变量，如：</p>
+<ul>
+<li>方法中的参数或局部变量；</li>
+<li>类的静态成员或非静态成员；</li>
+<li>代码中的常量；</li>
+</ul>
+<p>&emsp;&emsp;这种方法的效率相对于引用计数来说相对复杂，而且效率较低，但是解决了循环引用的问题，是<code>Java</code>垃圾回收中主要使用的方法。</p>
+<br>
+
+<h3 id="emsp-2-3-如何释放垃圾"><a href="#emsp-2-3-如何释放垃圾" class="headerlink" title="&emsp;2.3 如何释放垃圾"></a>&emsp;2.3 如何释放垃圾</h3><p>&emsp;&emsp;释放垃圾指的就是清除无用对象，释放它们所占的内存空间，方便继续使用。这里主要介绍三种方法：</p>
+<ul>
+<li>标记—清除算法；</li>
+<li>复制算法；</li>
+<li>标记—整理算法；</li>
+</ul>
+<p>&emsp;&emsp;这三种算法根据具体情况的不同，搭配使用，才能发挥最好的效果。下面就来一一介绍。</p>
+<br>
+
+<p>&emsp;<strong>（1）标记—清除算法（Mark-Sweep）</strong></p>
+<p>&emsp;&emsp;标记—清除是以上上面三种算法中最基础的一种，为什么说它是最基础的，因为它的原理非常简单。故名思意，这个算法分为两个步骤：（1）标记；（2）清除。</p>
+<ul>
+<li><strong>标记</strong>：标记指的就是我们上面所说的可达性分析，采用之前所说的可达性分析算法遍历对象，所有不可达的对象将被标记为垃圾，等待回收；</li>
+<li><strong>清除</strong>：这一步很简单，直接释放垃圾对象所占内存空间；</li>
+</ul>
+<p>&emsp;&emsp;这个算法有两个的问题：</p>
+<ol>
+<li>效率较低，标记和清除这两个步骤的效率都比较低，清除的效率低是因为需要扫描整个内存空间，逐个释放对象所占内存；</li>
+<li>使用这个算法清除垃圾后，将会造成很多内存碎片，所以可能出现剩余内存较多，但是没有较大的连续空间，导致大对象无法被分配空间，而再次触发垃圾回收；</li>
+</ol>
+<p>&emsp;&emsp;我们通过两张对比图来看看这个算法的效果。通过下面这张图我们可以看到，在垃圾回收后造成了很多的内存碎片。</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/.io//1.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<p>&emsp;<strong>（2）复制算法（Copying）</strong></p>
+<p>&emsp;&emsp;为了解决效率较低以及产生内存碎片的问题，有人提出了一个新的算法——复制算法。这个算法的原理是：将内存分为两个相等大小的区域，一块存放对象，一块保留。当存放对象的那块区域无法再分配空间时，将所有仍然存活的对象复制到保留的那块区域中，然后直接释放当前正在使用区域的全部内存。这样一来，仍然存活的对象被放进保留区，而垃圾对象也被释放了。同时，之前被使用的空间被清空后，成了新的保留区，而之前的保留区成了被使用的空间，就这样不断循环使用两个空间。</p>
+<p>&emsp;&emsp;我们之前提过，堆内存被分为新生代和老年代。在新生代中，每次垃圾回收都可以释放大量的对象，只有少部分存活，所以只有少部分对象要被复制到保留区中，这也意味着复制并不会太耗时。除此之外，直接释放被使用的空间的全部内存，比一段一段释放的效率也要高很多。同时，对象被复制到另外一个区域时，会被整齐地摆放，所以不会出现内存碎片，所以能够更简单地分配空间。所以，复制算法的效率要远远高于标记—清除算法。以下是一张复制算法的演示图：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/.io//2.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;但是，这里存在一个问题，复制算法将内存区域划分为相等的两部分，这也意味着每次都有一半的空间无法被使用，这未免也太浪费了。所以，对于空间的划分，需要做出一些改进。<code>IBM</code>公司的研究表明，<code>98%</code>的对象存活时间都非常的短暂，所以，完全没有必要保留一半的空间供复制使用。在实际实现中，会将空间划分为三块区域，一块较大的<code>Eden</code>空间，以及两块较小的<code>Survivor</code>空间。在为新对象分配空间时，首先会将其分配到<code>Eden</code>空间中，若<code>Eden</code>空间无法再分配空间时，将会触发垃圾回收，此时，会将<code>Eden</code>空间中的存活对象复制到其中一块<code>Survivor</code>空间中，然后清空<code>Eden</code>空间。当<code>Eden</code>空间再一次因无法分配空间而触发垃圾回收时，则会将<code>Eden</code>空间中的存活对象，以及上一次被复制进<code>Survivor</code>空间中的存活对象，都复制到另一块<code>Survivor</code>空间中，然后将<code>Eden</code>和上一块<code>Survivor</code>清空。也就是说，交替地使用两块<code>Survivor</code>空间，来存放垃圾回收中任然存活的对象。而在具体实现中，这三个空间的比例一搬是<code>8：1：1</code>，即是说只有<code>10%</code>的空间无法被使用。</p>
+<p>&emsp;&emsp;可以看出，这个算法在大部分对象的生命周期都短时，效率会非常高，但是若大部分对象的生命周期都很长，将不再适用，所以这个算法一般只被用在新生代中。这里我们不得不考虑一个问题，当我们使用了上面说的将内存划分为三块的这种方式时，可能会出现一个问题：如果在某次垃圾回收过后，仍然有大量的对象存活，此时一个<code>Survivor</code>空间不够存放这些对象怎么办？这时候就需要有另一个空间来做担保了，当这种情况发生时，会将这些对象放入另一个空间中，那个空间就叫做<strong>担保空间</strong>。就像我们去银行贷款，需要有一个担保人，当贷款人不能偿还时，由担保人代为偿还。以上算法是用在新生代中，而所谓的担保空间，实际上就是老年代。老年代为这个算法提供了担保，但是在大部分情况下，<code>Survivor</code>都是能够满足需求的。</p>
+<br>
+
+<p>&emsp;<strong>（3）标记—整理（Mark-Compact）</strong></p>
+<p>&emsp;&emsp;由于老年代中的对象一般存活时间都比较长，所以并不适合在老年代使用上面的复制算法进行垃圾回收。而有人根据老年代的特点，提出了标记—整理算法，注意看清楚，这里是<strong>整理</strong>，而不是第一种算法中的清除。这个算法也分为标记和整理两个步骤，标记这个步骤和第一个算法是一样的，关键是整理步骤。所谓的整理，就是将内存中还存活的对象向一边移动，直至这些对象相互靠拢，整齐排列，然后直接清除不属于这一部分的全部内存。标记—整理的好处是解决内存碎片的问题。以下是这个算法的演示图：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/.io//3.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<br>
+
+<p>&emsp;<strong>（4）分代收集算法</strong></p>
+<p>&emsp;&emsp;分代收集算法并不是什么新思想，而是对上面三种算法的综合使用。前面也提过，为方便垃圾回收，一般将堆内存分为<strong>新生代</strong>和<strong>老年代</strong>两个部分。</p>
+<ul>
+<li>对于新生代而言，这一块区域中的对象存活时间短，每一次垃圾回收都能回收大部分内存，所以适合使用复制算法，同时以老年代作为这个算法的担保空间；</li>
+<li>对于老年代而言，每次垃圾回收只能释放小部分空间，若使用复制算法，每次将需要做大量复制，而且此时<code>Survivor</code>需要较大的空间，所以不适合使用复制算法，因此在老年代中，一般使用标记—清除或者标记—整理算法；</li>
+</ul>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;上面对<code>JVM</code>中的垃圾回收算法做了一个比较详细的介绍，相信看完这一篇博客会对这部分内容有更深的理解。但是，归根到底，上面的内容只是理论，接下来我将写一篇博客，来讲讲<code>JVM</code>具体如何分配和释放对象，作为<code>JVM</code>系列博客的第三篇。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《深入理解Java虚拟机》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-16T16:44:24.694Z" itemprop="dateUpdated">2020-03-17 00:44:24</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&title=《Java中的垃圾回收算法详解》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&title=《Java中的垃圾回收算法详解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java中的垃圾回收算法详解》 — 博客主页&url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/浅析Java的内存模型/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">浅析Java的内存模型</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&title=《Java中的垃圾回收算法详解》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&title=《Java中的垃圾回收算法详解》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Java中的垃圾回收算法详解》 — 博客主页&url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.github.io/浅析Java中的垃圾回收算法/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
