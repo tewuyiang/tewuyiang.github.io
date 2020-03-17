@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>浅析JVM中对象的分配与回收策略 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JVM">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;这是我的JVM系列博客第三篇，这篇博客来讲一讲JVM中，对象的分配与回收策略。即对象是如何在堆中存放，以及垃圾回收何时被触发，如何触发等内容。以下内容是建立在已经知道Java垃圾回收算法的基础上描述的，如果对垃圾回收算法不了解，应该先去看看这一部分的内容，可以看看这篇博客：Java中的垃圾回收算法详解。   二、正文&amp;emsp;2.1 堆内存的划分以及使用的垃圾回收">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅析JVM中对象的分配与回收策略">
+<meta property="og:url" content="http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;这是我的JVM系列博客第三篇，这篇博客来讲一讲JVM中，对象的分配与回收策略。即对象是如何在堆中存放，以及垃圾回收何时被触发，如何触发等内容。以下内容是建立在已经知道Java垃圾回收算法的基础上描述的，如果对垃圾回收算法不了解，应该先去看看这一部分的内容，可以看看这篇博客：Java中的垃圾回收算法详解。   二、正文&amp;emsp;2.1 堆内存的划分以及使用的垃圾回收">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-03-17T07:36:01.008Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅析JVM中对象的分配与回收策略">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;这是我的JVM系列博客第三篇，这篇博客来讲一讲JVM中，对象的分配与回收策略。即对象是如何在堆中存放，以及垃圾回收何时被触发，如何触发等内容。以下内容是建立在已经知道Java垃圾回收算法的基础上描述的，如果对垃圾回收算法不了解，应该先去看看这一部分的内容，可以看看这篇博客：Java中的垃圾回收算法详解。   二、正文&amp;emsp;2.1 堆内存的划分以及使用的垃圾回收">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">浅析JVM中对象的分配与回收策略</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">浅析JVM中对象的分配与回收策略</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-16T16:59:56.000Z" itemprop="datePublished" class="page-time">
+  2020-03-17
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-堆内存的划分以及使用的垃圾回收算法"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 堆内存的划分以及使用的垃圾回收算法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-对象的分配策略"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 对象的分配策略</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-空间分配的担保机制"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 空间分配的担保机制</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-浅析JVM中对象的分配与回收策略"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">浅析JVM中对象的分配与回收策略</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-17 00:59:56" datetime="2020-03-16T16:59:56.000Z"  itemprop="datePublished">2020-03-17</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;这是我的<code>JVM</code>系列博客第三篇，这篇博客来讲一讲<code>JVM</code>中，对象的分配与回收策略。即对象是如何在堆中存放，以及垃圾回收何时被触发，如何触发等内容。以下内容是建立在已经知道<code>Java</code>垃圾回收算法的基础上描述的，如果对垃圾回收算法不了解，应该先去看看这一部分的内容，可以看看这篇博客：<a href="https://www.cnblogs.com/tuyang1129/p/12508216.html" target="_blank" rel="noopener">Java中的垃圾回收算法详解</a>。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-堆内存的划分以及使用的垃圾回收算法"><a href="#emsp-2-1-堆内存的划分以及使用的垃圾回收算法" class="headerlink" title="&emsp;2.1 堆内存的划分以及使用的垃圾回收算法"></a>&emsp;2.1 堆内存的划分以及使用的垃圾回收算法</h3><p>&emsp;&emsp;在介绍如何回收之前，我们先需要了解堆内存的划分。堆内存是<code>Java</code>内存模型中最大的一块（<code>Java</code>的内存模型可以参考这篇博客：<a href="https://www.cnblogs.com/tuyang1129/p/12499181.html" target="_blank" rel="noopener">浅析Java的内存模型</a> ），它存在的唯一目的就是存放对象。<code>JVM</code>为了更好地管理对象以及进行垃圾回收，将对堆内存划分为两大区域，即新生代和老年代：</p>
+<ul>
+<li><strong>新生代</strong>：用来存放生命周期短的对象。由于这一块内存中的对象存活时间较短，且对象首先在这里被分配，所以频繁发生垃圾回收，而且每次回收一般都能释放大量空间；</li>
+<li><strong>老年代</strong>：用来存放生命周期长的对象。新生代中存活了较长时间的对象会被迁移到这里（当然，对象进入老年代不仅仅只有这一个方法），所以这里存放的对象生命周期一般较长，所以这一块区域发生垃圾回收的频率较低，每次回收释放的空间也较少；</li>
+</ul>
+<p>&emsp;&emsp;对于新生代而言，这一块区域中的对象存活时间短，每一次垃圾回收都能回收大部分内存，所以适合使用<strong>复制算法</strong>进行垃圾回收，同时以老年代作为这个算法的担保空间；对于老年代而言，每次垃圾回收只能释放小部分空间，若使用复制算法，每次将需要做大量复制，而且此时<code>Survivor</code>需要较大的空间，所以不适合使用复制算法，因此在老年代中，一般使用<strong>标记—清除</strong>或者<strong>标记—整理</strong>算法进行垃圾回收。</p>
+<br>
+
+<h3 id="emsp-2-2-对象的分配策略"><a href="#emsp-2-2-对象的分配策略" class="headerlink" title="&emsp;2.2 对象的分配策略"></a>&emsp;2.2 对象的分配策略</h3><p>&emsp;&emsp;由于新生代使用的是复制算法，所以新生代的内存被划分为三个空间，即一个较大的<code>Eden</code>空间用来为新对象分配空间，两个较小的<code>Survivor</code>空间复制垃圾回收后存活的对象。下面就来介绍一下对象的分配原则。</p>
+<p>&emsp;<strong>（1）对象优先在Eden空间分配</strong></p>
+<p>&emsp;&emsp;当我们创建一个对象时，若没有特殊情况，这个对象会被分配在新生代的<code>Eden</code>空间。此时，若<code>Eden</code>空间不足，无法提供这个对象所需的空间时，将会触发垃圾回收机制，清理<code>Eden</code>空间，为新对象腾出更多空间。在进行垃圾回收时，会将<code>Eden</code>中仍然存活的对象放入一个空闲的<code>Survivor</code>中，但是若<code>Survivor</code>空间不足以存放这些存活的对象，则由于担保机制的存在，这些对象会被放入到老年代中。</p>
+<p>&emsp;<strong>（2）大对象直接在老年代分配</strong></p>
+<p>&emsp;&emsp;假设我们在代码中创建了一个很大的对象（比如数组或较长的字符串），而这个对象在很长一段时间都要使用，不会轻易被当作垃圾回收。这时候将面临一个问题：若将这个对象分配在新生代的<code>Eden</code>中，每次进行垃圾回收时，都需要将这个大对象复制到<code>Survivor</code>中保留，这个复制过程是一笔很大的开销，而且由于大对象占用了大量空间，垃圾回收将会频繁发生。所以，为了避免这种情况的发生，对于较大的对象，将会被直接分配到老年代中，原因是老年代发生垃圾回收的频率较低，而且不是使用复制算法进行垃圾回收。</p>
+<p>&emsp;&emsp;那如何判断一个对象是否属于大对象呢？<code>JVM</code>提供一个参数<code>-XX：PretenureSizeThreshold</code>，通过这个参数来设定多大属于大对象。当需要为一个对象分配空间时，若此对象所需的空间大于这个参数的值，就会被判定为一个大对象，从而在老年代中为其分配空间。</p>
+<p>&emsp;<strong>（3）长期存活的对象将进入老年代</strong></p>
+<p>&emsp;&emsp;这个原则合情合理，老年代存在的首要目的，就是存放生命周期较长的对象，所以对于新生代中存活了很长时间的对象，就应该把他们移入老年代，而不是一直留在新生代中占用空间。每一个对象都有一个自己的<strong>年龄计数器</strong>，记录了自己的存活周期。对于新生代中的对象，初始时刻它的年龄计数器为<code>0</code>，每经历一次垃圾回收后，年龄计数器<code>+1</code>。当计数器的值到达设定好的阈值时（默认是<code>15</code>），就证明这个对象是一个”老油条“，于是将它转入到老年代中。</p>
+<p>&emsp;&emsp;对于生命周期长的对象，由于不会轻易死亡，所以每一次垃圾回收都会被它拖慢，而且垃圾回收对于短时间内不会死亡的对象也没有意义，所以不应该将它留在垃圾回收频繁的新生代占用空间，这就是需要将这种对象转让老年代的理由。<code>JVM</code>中也提供了一个参数<code>-XX：MaxTenuringThreshold</code>来设置对象进入老年代的阈值，当对象的年龄计数器超过这个值时将进入老年代。</p>
+<p>&emsp;<strong>（4）动态年龄判断</strong></p>
+<p>&emsp;&emsp;对于新生代中的对象，并不一定需要年龄计数器到达阈值才被放入老年代，有一种特殊情况会导致对象直接进入老年代。当新生代的<code>Survivor</code>空间中，某一个年龄的对象相加，所占空间总和超过了<code>Survivor</code>空间的一半，则大于或等于这个年龄的对象将直接进入老年代，而不需要到达阈值。比如说，在<code>Survivor</code>空间中，年龄为<code>5</code>的对象相加，所占空间超过了<code>Survivor</code>总空间的一半，则所有年龄<code>&gt;=5</code>的对象，会被直接转入老年代。</p>
+<br>
+
+<h3 id="emsp-2-3-空间分配的担保机制"><a href="#emsp-2-3-空间分配的担保机制" class="headerlink" title="&emsp;2.3 空间分配的担保机制"></a>&emsp;2.3 空间分配的担保机制</h3><p>&emsp;&emsp;前面我们提到了，老年代为新生代的垃圾回收提供了担保，即当新生代发生垃圾回收后，<code>Survivor</code>空间不足以容纳所有存活的对象，则这些对象需要放入到老年代中，下面就来说说老年代如何最大效率地提供这种服务。</p>
+<p>&emsp;&emsp;在新生代发生垃圾回收前，老年代会统计一下它的剩余内存，看看是否装下新生代中的所有对象，若能够装下，说明新生代可以直接进行垃圾回收，老年代完全能够保证有空间为他做担保；但是，若老年代所剩空间不足以装下新生代的所有对象，则就需要深思熟虑了：老年代剩下的空间虽然不足以装下新生代的全部对象，但是只要能够装下新生代垃圾回收后剩下的对象就行了。然而，这里并不确定新生代在垃圾回收后，会剩下多少对象，可能很多也可能很少，老年代此时如果直接允许新生代进行垃圾回收，将会面临需要做担保时无法装下其剩余对象的风险。这里<code>JVM</code>会通过<strong>概率学</strong>进行判断：即<code>JVM</code>统计之前发生担保时，需要提供的空间的平均值，若老年代当前剩余空间大于平均值，表示大概率能够担保成功，于是新生代可以直接进行垃圾回收；若小于这个平均值，则老年代自己会进行一次垃圾回收，腾出一部分空间，再让新生代进行垃圾回收。当老年代发生了垃圾回收后，还是无法满足空间的分配，JVM就会抛出<strong>内存溢出</strong>异常。</p>
+<p>&emsp;&emsp;通过上面的步骤可以看出，老年代在提供担保的同时，尽力避免自己发生垃圾回收，只有在自己无法保证能够担保的情况下，才会进行垃圾回收。这样做的目的就是为了提高新生代垃圾回收的速度。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;以上就是对象在堆中的分配与回收策略，理解这一部分内容，对我们日常对创建对象的理解有很大的帮助。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《深入理解Java虚拟机》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-17T07:36:01.008Z" itemprop="dateUpdated">2020-03-17 15:36:01</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&title=《浅析JVM中对象的分配与回收策略》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&title=《浅析JVM中对象的分配与回收策略》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《浅析JVM中对象的分配与回收策略》 — 博客主页&url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/浅析Java中的垃圾回收算法/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Java中的垃圾回收算法详解</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&title=《浅析JVM中对象的分配与回收策略》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&title=《浅析JVM中对象的分配与回收策略》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《浅析JVM中对象的分配与回收策略》 — 博客主页&url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.github.io/浅析JVM中对象的分配与回收策略/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

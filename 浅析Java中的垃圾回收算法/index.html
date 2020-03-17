@@ -29,14 +29,14 @@
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写JVM的系列博客，这是第二篇。这篇博客就来谈一谈JVM中使用到的垃圾回收算法。   二、正文&amp;emsp;2.1 什么是垃圾回收&amp;emsp;&amp;emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://tewuyiang.github.io/.io//1.png">
-<meta property="og:image" content="http://tewuyiang.github.io/.io//2.png">
-<meta property="og:image" content="http://tewuyiang.github.io/.io//3.png">
-<meta property="og:updated_time" content="2020-03-16T16:44:24.694Z">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004221380-327786573.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004255891-36144671.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004333432-821161892.png">
+<meta property="og:updated_time" content="2020-03-16T17:21:48.929Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java中的垃圾回收算法详解">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前段时间大致看了一下《深入理解Java虚拟机》这本书，对相关的基础知识有了一定的了解，准备写一写JVM的系列博客，这是第二篇。这篇博客就来谈一谈JVM中使用到的垃圾回收算法。   二、正文&amp;emsp;2.1 什么是垃圾回收&amp;emsp;&amp;emsp;在正式介绍垃圾回收算法前，先来说说什么是垃圾回收。这里所说的垃圾主要指的是已经不会再继续使用的对象，当然也有可能是其他，比">
-<meta name="twitter:image" content="http://tewuyiang.github.io/.io//1.png">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004221380-327786573.png">
     
     <link rel="shortcut icon" href="/img/title.png">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
@@ -258,7 +258,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="1.png" alt title>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004221380-327786573.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -271,7 +271,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="2.png" alt title>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004255891-36144671.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -285,7 +285,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="3.png" alt title>
+                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200317004333432-821161892.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -314,7 +314,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-03-16T16:44:24.694Z" itemprop="dateUpdated">2020-03-17 00:44:24</time>
+    最后更新时间：<time datetime="2020-03-16T17:21:48.929Z" itemprop="dateUpdated">2020-03-17 01:21:48</time>
 </span><br>
 
 
@@ -391,7 +391,14 @@
     </div>
 
     
-<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/浅析JVM中对象的分配与回收策略/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">浅析JVM中对象的分配与回收策略</h4>
+      </a>
+    </div>
   
 
   
