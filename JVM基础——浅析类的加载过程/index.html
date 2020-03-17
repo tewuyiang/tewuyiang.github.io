@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>JVM基础——浅析类的加载过程 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JVM">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;这是JVM系列博客的第四篇，这篇博客来讲一讲Java中的一个类是如何被加载进的，在加载的过程中需要经历哪些步骤。这应该是JVM中比较重要的一个部分，对于我们理解Java语言的一些特性有很大的帮助。而在看这篇博客之前，需要先了解JVM的内存模型，不了解的可以看一看这篇博客：浅析Java的内存模型 。   二、正文&amp;emsp;2.1 什么是类加载&amp;emsp;&amp;emsp;">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM基础——浅析类的加载过程">
+<meta property="og:url" content="http://tewuyiang.github.io/JVM基础——浅析类的加载过程/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;这是JVM系列博客的第四篇，这篇博客来讲一讲Java中的一个类是如何被加载进的，在加载的过程中需要经历哪些步骤。这应该是JVM中比较重要的一个部分，对于我们理解Java语言的一些特性有很大的帮助。而在看这篇博客之前，需要先了解JVM的内存模型，不了解的可以看一看这篇博客：浅析Java的内存模型 。   二、正文&amp;emsp;2.1 什么是类加载&amp;emsp;&amp;emsp;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//Work_Software/Hexo/blog/source/_posts/JVM基础——浅析类的加载过程/1.png">
+<meta property="og:updated_time" content="2020-03-17T14:35:50.911Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM基础——浅析类的加载过程">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;这是JVM系列博客的第四篇，这篇博客来讲一讲Java中的一个类是如何被加载进的，在加载的过程中需要经历哪些步骤。这应该是JVM中比较重要的一个部分，对于我们理解Java语言的一些特性有很大的帮助。而在看这篇博客之前，需要先了解JVM的内存模型，不了解的可以看一看这篇博客：浅析Java的内存模型 。   二、正文&amp;emsp;2.1 什么是类加载&amp;emsp;&amp;emsp;">
+<meta name="twitter:image" content="http://tewuyiang.github.io/.io//Work_Software/Hexo/blog/source/_posts/JVM基础——浅析类的加载过程/1.png">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">JVM基础——浅析类的加载过程</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">JVM基础——浅析类的加载过程</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-17T12:15:01.000Z" itemprop="datePublished" class="page-time">
+  2020-03-17
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是类加载"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是类加载</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-加载"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 加载</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-验证"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 验证</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-4-准备"><span class="post-toc-number">2.4.</span> <span class="post-toc-text"> 2.4 准备</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-5-解析"><span class="post-toc-number">2.5.</span> <span class="post-toc-text"> 2.5 解析</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-6-初始化"><span class="post-toc-number">2.6.</span> <span class="post-toc-text"> 2.6 初始化</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-JVM基础——浅析类的加载过程"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">JVM基础——浅析类的加载过程</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-17 20:15:01" datetime="2020-03-17T12:15:01.000Z"  itemprop="datePublished">2020-03-17</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;这是<code>JVM</code>系列博客的第四篇，这篇博客来讲一讲<code>Java</code>中的一个类是如何被加载进的，在加载的过程中需要经历哪些步骤。这应该是<code>JVM</code>中比较重要的一个部分，对于我们理解<code>Java</code>语言的一些特性有很大的帮助。而在看这篇博客之前，需要先了解<code>JVM</code>的内存模型，不了解的可以看一看这篇博客：<a href="https://www.cnblogs.com/tuyang1129/p/12499181.html" target="_blank" rel="noopener">浅析Java的内存模型</a> 。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-什么是类加载"><a href="#emsp-2-1-什么是类加载" class="headerlink" title="&emsp;2.1 什么是类加载"></a>&emsp;2.1 什么是类加载</h3><p>&emsp;&emsp;我们都知道，编写的<code>Java</code>代码被存放在后缀名为<code>.java</code>的源文件中，而当我们需要执行这个文件中的代码时，会先将源文件编译为<code>.class</code>结尾的字节码文件。<code>JVM</code>并不认识<code>.java</code>中的内容文件，真正被<code>JVM</code>解释器执行的是这个<code>class</code>文件中的字节码。所谓类加载，就是当我们要执行某一段代码之前，先将这段代码对应的类的字节码读取到内存中（注意，字节码并不一定是存储在<code>class</code>文件中，也可以来源于网络，或者动态生成，只要符合字节码的格式即可），并进行一些相应的操作。只有当字节码被加载进了内存，才能够被运行。</p>
+<p>&emsp;&emsp;类从开始加载起，它的生命周期被分为七个阶段：</p>
+<ol>
+<li>加载；</li>
+<li>验证；</li>
+<li>准备；</li>
+<li>解析；</li>
+<li>初始化；</li>
+<li>使用；</li>
+<li>卸载；</li>
+</ol>
+<p>&emsp;&emsp;其中的前五个阶段，就是类加载的过程。在类加载期间，这五个过程按部就班的进行，但并不一定是一个一个依次进行，有的步骤之间会有一些交错，比如加载和验证。下面我就来详细介绍一下类加载的五个过程分别有什么作用。</p>
+<br>
+
+<h3 id="emsp-2-2-加载"><a href="#emsp-2-2-加载" class="headerlink" title="&emsp;2.2 加载"></a>&emsp;2.2 加载</h3><p>&emsp;&emsp;下面来说说第一个阶段——加载（注意，加载不等同于类加载，只是其中的一个阶段）。这个阶段的工作就是：<strong>将字节码读取进内存，并转换成方法区的数据结构，然后存入方法区中，同时生成这个类的一个java.lang.Class对象，作为访问这个类信息的接口</strong>。</p>
+<p>&emsp;&emsp;对象一般都是存在堆内存中，但是虚拟机规范中并未明确规定<code>Class</code>对象也需要存在堆内存中，所以具体存在哪里需要看具体实现，比如<code>HotSpot</code>虚拟机的<code>Class</code>对象就是存在方法区中的。</p>
+<br>
+
+<h3 id="emsp-2-3-验证"><a href="#emsp-2-3-验证" class="headerlink" title="&emsp;2.3 验证"></a>&emsp;2.3 验证</h3><p>&emsp;&emsp;第二个过程阶段叫做验证，其目的是<strong>验证字节码的合法性和正确性</strong>。验证主要分为四个部分：</p>
+<p>&emsp;<strong>（1）文件格式验证</strong></p>
+<p>&emsp;&emsp;<code>JVM</code>规范对于字节码的每一个部分都有规定，每一个字节代表什么内容，可以是哪些值都是有所限制的。这也就是说，只有完全符合规则的字节码，才能够被<code>JVM</code>虚拟机所认同。而这一步的工作就是检查字节码的格式是否符合要求。比如字节码的前四个字节是固定的，只能是十六进制的0xCAFEBABE，这是字节码的标识。除此之外，可能还需要检查字节码中的版本号是否和当前<code>JVM</code>的版本对应；字节码中的各个部分是否与规范相匹配等。</p>
+<p>&emsp;&emsp;只有通过验证的字节码，才能被存入方法区中。这就表示这一步验证与上面所说的加载过程是交错进行的。在我们当前所说的四种验证中，只有这一种是发生在方法区之外，而剩下的三个都是在方法区中进行。</p>
+<p>&emsp;<strong>（2）元数据校验</strong></p>
+<p>&emsp;&emsp;这一步主要是对类的结构进行分析，判断是否存在不符合语义的部分，例如：</p>
+<ul>
+<li>分析当前正在加载的类是否有父类，对于<code>Java</code>中的类来说，只有<code>Object</code>类没有父类，其他的都有父类（<code>Object</code>是公共父类）；</li>
+<li>分析当前的类是否继承了一个被<code>final</code>修饰的类，被<code>final</code>修饰的类是不允许被继承的；</li>
+<li>若当前类是非抽象的，而它实现了一个接口或者继承了一个抽象类，则检查当前类是否实现了接口或抽象类中的抽象方法；</li>
+</ul>
+<p>&emsp;&emsp;……</p>
+<p>&emsp;<strong>（3）字节码校验</strong></p>
+<p>&emsp;&emsp;这一步骤就是对方法体中的代码进行校验，检查这些代码是否符合语义，是否存在不合法的地方，例如：</p>
+<ul>
+<li>保证数据的类型转换是有效的，不会出现将一个<code>String</code>类型的数使用<code>int</code>进行接收等情况；</li>
+<li>保证代码中的指令不会跳转到方法体之外的字节码指令上；</li>
+</ul>
+<p>&emsp;&emsp;……</p>
+<p>&emsp;<strong>（4）符号引用验证</strong></p>
+<p>&emsp;&emsp;这一过程将在类加载的第四步——解析过程中发生，而其目的就是为了验证字节码中的符号引用。对于符号引用，在讲到解析的时候再具体描述，当前只需要知道它相当于一个引用类型的变量，也就是用字符串来替代地址作为引用。而对于符号引用的验证包括：</p>
+<ul>
+<li>符号引用中通过字符串描述的全限定名，是否能找当相应的类；</li>
+<li>是否存在符号引用所描述的字段和方法；</li>
+</ul>
+<p>&emsp;&emsp;……</p>
+<p>&emsp;&emsp;以上就是验证阶段的主要工作。这里可能有一个疑问，我们的代码不都是用合法的<code>Java</code>语言编写出来，然后被编译为字节码的吗，为什么还需要这么复杂的校验呢？那是因为字节码并不等于<code>Java</code>语言。<code>Java</code>语言不能做到的事情，不代表字节码指令做不到。我们完全可以用其他语言编写一些<code>Java</code>做不到的程序，然后将其编译为<code>Java</code>的字节码交给<code>JVM</code>执行，甚至可以自己手动编写字节码（虽然非常难）。字节码解释器所能做到的指令，并不局限于<code>Java</code>的语法，所以要对字节码进行验证。</p>
+<br>
+
+<h3 id="emsp-2-4-准备"><a href="#emsp-2-4-准备" class="headerlink" title="&emsp;2.4 准备"></a>&emsp;2.4 准备</h3><p>&emsp;&emsp;准备阶段的作用的简单了。这一步的作用就是<strong>为类中的静态成员变量赋初值</strong>（注意是静态变量而不是实例变量，实例变量的值将在创建对象时被赋予）。在这一过程中，<code>JVM</code>为所有的静态变量赋予其数据类型对应的<strong>零值</strong>。比如在类中有如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> value = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;在这一阶段，<code>valu</code>e会被赋予初始值<code>0</code>，而不是<code>123</code>（<code>123</code>将在初始化阶段被赋予）。而每一种不同类型的数据，都有自己对应的零值，如下表格所示：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/.io//Work_Software\Hexo\blog\source\_posts\JVM基础——浅析类的加载过程\1.png" alt title>
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+<p>&emsp;&emsp;当然，这里还有一种特殊情况，对于类中的常量（被<code>final</code>修饰的静态变量），如果在变量声名的地方直接就被赋值，则在这一阶段就会被赋上最终值。如下面这行代码，在准备阶段，就会为变量<code>value</code>赋值<code>123</code>，而不是<code>0</code>，因为对于常量来说，它的值并不允许被改变，所有可以直接赋初值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> value = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h3 id="emsp-2-5-解析"><a href="#emsp-2-5-解析" class="headerlink" title="&emsp;2.5 解析"></a>&emsp;2.5 解析</h3><p>&emsp;&emsp;这一步的目的是：<strong>将字节码中的符号引用，转换为直接引用</strong>。我们先来说一说符号引用和直接引用的区别：</p>
+<ul>
+<li><strong>符号引用</strong>：假设在一个类中引用了其他类，或者调用了其他类的方法（当然不仅仅只有这两种情况），则在程序被编译成字节码的后，这些引用会被编译成一串字符，通过一个字符串来表示这些引用。为什么这么做？因为在类没有被加载到内存中时，是没有地址的，也不知道其他数据的地址，所以此时不能使用直接引用，而是用符号来替代，这就是符号引用。一个类被编译后，一般会包含许多的符号引用；</li>
+<li><strong>直接引用</strong>：直接引用就比较好理解了，它可以是直接指向目标的指针，也可以是一个地址偏移量……直接引用和虚拟机的内存结构有关，根据内存的结构，直接引用也可以有不同的形式；</li>
+</ul>
+<p>&emsp;&emsp;当类被加载到方法区后，就能够找到引用目标的地址了，而符号引用毕竟只是一个虚假的引用，所以这一步的工作就是将这些虚假的引用替换成可以真正寻找到目标的直接引用。而刚刚也提过，在验证阶段，有一个符号引用验证，就是对这个过程进行验证。</p>
+<br>
+
+<h3 id="emsp-2-6-初始化"><a href="#emsp-2-6-初始化" class="headerlink" title="&emsp;2.6 初始化"></a>&emsp;2.6 初始化</h3><p>&emsp;&emsp;到了这一步，就是正式执行程序员编写的代码了。在我们编写的类中，可能会为静态变量赋初值，可能会编写静态代码块（static { }），这些都是属于初始化的内容（当然，不包括对实例变量赋初值或者构造方法，这些是在创建对象时执行的）。在编译阶段，编译器会自动收集这些内容，并封装成一个<code>&lt;cinit&gt;()</code>方法，在这一阶段执行。需要注意的是，这些初始化的内容，<strong>是按照我们编写的顺序从上到下收集并封装进<code>&lt;cinit&gt;()</code>的</strong>，也就意味着在前面的代码，无法使用后面声明的变量，比如如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        a = <span class="number">2</span>;</span><br><span class="line">        System.out.println(a);  <span class="comment">//编译错误：Illegal forward reference</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">1</span>;	<span class="comment">// 声明一个静态变量</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(a);  <span class="comment">// 编译通过，输出1，而不是2</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面的代码编写了两个静态代码块，而在它们中间声明了一个静态变量。我们尝试在第一个静态代码块中为这个变量赋值，发现没有问题，但是当我们想要使用这个变量时，发生了编译错误，提示<strong>非法向前引用</strong>，而在第二个静态代码块中使用则没有问题，这验证了我们之前的说法。但是有点疑惑，为什么在第一个静态代码块中，为<code>a</code>赋值却没有问题？我认为这个<code>&lt;cinit&gt;()</code>方法可能采用了<code>C语言</code>的形式，所有的变量声明都放在了最上方，所以这里可以访问到<code>a</code>（个人猜测）。</p>
+<p>&emsp;&emsp;对于初始化阶段，有许多需要注意的问题：</p>
+<ul>
+<li><strong>在子类被初始化之前，若其父类还没有初始化，则会先初始化父类，也就是父类的<code>&lt;cinit&gt;()</code>方法会先执行</strong>（和创建对象类似，创建一个子类对象时，一定会先创建父类对象）。正因为如此，<code>Object</code>类是所有类中最先被初始化的；</li>
+<li><strong>若一个类实现了一个接口，则这个类被初始化时，这个接口并不会初始化</strong>。和类不同，接口只有在初次访问成员时才会初始化。除此之外，一个接口实现了一个接口，这个子接口被初始化时，父接口也不会初始化；</li>
+<li><strong>多线程环境下，虚拟机会同步<code>&lt;cinit&gt;()</code>方法的运行</strong>。也就是说，只有一个线程会执行这个方法，若多个线程都想要执行这个方法，则只有最先的那个线程能够执行，其他的只能阻塞等待，直到这个方法被执行完。但是其他线程检查到这个方法被执行完，就不会再执行它了。</li>
+</ul>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;以上对类加载的五个步骤（加载、验证、准备、解析、初始化）的操作和功能做了一个大致的描述，看完之后应该会对类的加载有一个更加深入的了解。这里不得不再次提醒，虽然这五个步骤是按部就班地执行，但并不一定是一个个先后执行地，其中有些步骤的某一些过程是交互进行的。最后希望这篇博客对想要了解这部分内容的人有所帮助。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《深入理解Java虚拟机》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-17T14:35:50.911Z" itemprop="dateUpdated">2020-03-17 22:35:50</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&title=《JVM基础——浅析类的加载过程》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&title=《JVM基础——浅析类的加载过程》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《JVM基础——浅析类的加载过程》 — 博客主页&url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/浅析JVM中对象的分配与回收策略/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">浅析JVM中对象的分配与回收策略</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&title=《JVM基础——浅析类的加载过程》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&title=《JVM基础——浅析类的加载过程》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《JVM基础——浅析类的加载过程》 — 博客主页&url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.github.io/JVM基础——浅析类的加载过程/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
