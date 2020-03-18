@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>深入理解Java中方法重载的实现原理 | 博客主页 | 世界是个球，前方总有路！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="JVM">
+    <meta name="description" content="一、前言&amp;emsp;&amp;emsp;今天看《深入理解Java虚拟机》这本书的时候，看到了其中对方法重载（Overload）以及方法重写（Override）的原理讲解，顿时有了恍然大悟之感。这篇博客我就来参考书中的内容，讲一讲方法重载的实现原理。   二、正文&amp;emsp;2.1 什么是方法重载&amp;emsp;&amp;emsp;讲重载的实现原理之前，还是先来说一说什么是方法重载。Java中的每一个方法，都有自己的签">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解Java中方法重载的实现原理">
+<meta property="og:url" content="http://tewuyiang.github.io/深入理解Java方法重载的实现原理/index.html">
+<meta property="og:site_name" content="博客主页">
+<meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;今天看《深入理解Java虚拟机》这本书的时候，看到了其中对方法重载（Overload）以及方法重写（Override）的原理讲解，顿时有了恍然大悟之感。这篇博客我就来参考书中的内容，讲一讲方法重载的实现原理。   二、正文&amp;emsp;2.1 什么是方法重载&amp;emsp;&amp;emsp;讲重载的实现原理之前，还是先来说一说什么是方法重载。Java中的每一个方法，都有自己的签">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-03-18T11:34:16.038Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解Java中方法重载的实现原理">
+<meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;今天看《深入理解Java虚拟机》这本书的时候，看到了其中对方法重载（Overload）以及方法重写（Override）的原理讲解，顿时有了恍然大悟之感。这篇博客我就来参考书中的内容，讲一讲方法重载的实现原理。   二、正文&amp;emsp;2.1 什么是方法重载&amp;emsp;&amp;emsp;讲重载的实现原理之前，还是先来说一说什么是方法重载。Java中的每一个方法，都有自己的签">
+    
+    <link rel="shortcut icon" href="/img/title.png">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">特务依昂</h5>
+          <a href="mailto:1131564805@qq.com" title="1131564805@qq.com" class="mail">1131564805@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                博客
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/tewuyiang" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://weibo.com/u/5516635708/" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/tuyang1129/" target="_blank" >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">深入理解Java中方法重载的实现原理</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">深入理解Java中方法重载的实现原理</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-18T09:14:50.000Z" itemprop="datePublished" class="page-time">
+  2020-03-18
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、前言"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、前言</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、正文"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、正文</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-1-什么是方法重载"><span class="post-toc-number">2.1.</span> <span class="post-toc-text"> 2.1 什么是方法重载</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-2-如何选择调用哪一个重载方法"><span class="post-toc-number">2.2.</span> <span class="post-toc-text"> 2.2 如何选择调用哪一个重载方法</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#emsp-2-3-重载调用的优先级"><span class="post-toc-number">2.3.</span> <span class="post-toc-text"> 2.3 重载调用的优先级</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、总结"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、总结</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、参考"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、参考</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-深入理解Java方法重载的实现原理"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">深入理解Java中方法重载的实现原理</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-18 17:14:50" datetime="2020-03-18T09:14:50.000Z"  itemprop="datePublished">2020-03-18</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>&emsp;&emsp;今天看《深入理解Java虚拟机》这本书的时候，看到了其中对方法重载（<code>Overload</code>）以及方法重写（<code>Override</code>）的原理讲解，顿时有了恍然大悟之感。这篇博客我就来参考书中的内容，讲一讲方法重载的实现原理。</p>
+<br>
+
+<h2 id="二、正文"><a href="#二、正文" class="headerlink" title="二、正文"></a>二、正文</h2><h3 id="emsp-2-1-什么是方法重载"><a href="#emsp-2-1-什么是方法重载" class="headerlink" title="&emsp;2.1 什么是方法重载"></a>&emsp;2.1 什么是方法重载</h3><p>&emsp;&emsp;讲重载的实现原理之前，还是先来说一说什么是方法重载。<code>Java</code>中的每一个方法，都有自己的签名，或者也可以叫做标识，用来确认它的唯一性。<strong>在同一个类中，不能出现两个签名一样的方法</strong>。而方法的签名由什么组成呢？答案是<strong>方法名称 + 参数列表</strong>，也就是说，一个类中不允许出现两个方法名称一样，而且方法的参数列表也一样的方法（一个<code>static</code>，一个非<code>static</code>也不行）。知道上面的概念后，我们就可以定义方法重载了：<strong>在同一个类中，拥有相同方法名称，但是不同参数列表的多个方法，被称为重载方法，这种形式被称为方法的重载</strong>。例如下面几个方法，就是重载的方法，它们拥有相同的名称，但是参数列表不同：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"type int"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(String a)</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"type String"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(String arg1, <span class="keyword">int</span> arg2)</span></span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"String + int"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(<span class="keyword">int</span> arg1, String arg2)</span></span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"int + String"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;需要注意的是，参数列表的不同指的是参数的数量不同，或者在参数数量相同的情况下，相同位置的参数类型不同，比如上面最后两个方法，虽然参数都是一个<code>String</code>，一个<code>int</code>，但是位置不同，所以也是允许的。可以注意到，最后两个方法的参数名称都是<code>arg1</code>和<code>arg2</code>，且位置相同，但是并不影响，因为方法的签名和参数的名称无关，只和类型有关。</p>
+<p>&emsp;&emsp;最后需要注意的一点是，返回值并不能作为方法的重载条件，比如下面两个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 无返回值</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">test</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"type int"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 返回值为int</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">test</span><span class="params">(<span class="keyword">int</span> a)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;若一个类中同时出现以下两个方法，将会编译错误，因为它们的方法名称+参数列表是一致的，编译器无法识别。为什么返回值不能作为重载的依据呢？很简单，因为我们调用方法时，并不一定需要接收方法的返回值，比如下面这行代码，对于上面两个方法都是适用的，编译器无法确定选择哪一个：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span> <span class="params">(String[]args)</span></span>&#123;</span><br><span class="line">    test(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<br>
+
+<h3 id="emsp-2-2-如何选择调用哪一个重载方法"><a href="#emsp-2-2-如何选择调用哪一个重载方法" class="headerlink" title="&emsp;2.2 如何选择调用哪一个重载方法"></a>&emsp;2.2 如何选择调用哪一个重载方法</h3><p>&emsp;&emsp;当出现多个重载的方法时，编译器如何决定调用哪一个被重载的方法呢？相信很多人都知道，是<strong>根据调用方法时传递的实际参数类型来确定</strong>。比如说最开始列举的四个<code>test</code>方法，如果我们使用<code>test（1）</code>，那将调用<code>void test(int a)</code>这个方法；如果我们使用<code>test(&quot;aaa&quot;)</code>，那将调用<code>void test(String a)</code>这个方法。这个应该很好理解，编译器在编译期间，根据调用方法的实际参数类型，就能够确定具体需要调用的哪一个方法。但是，这只是一种简单的情况，下面来看看一种稍微复杂的情况，即继承关系下的方法重载（看完后先猜猜输出结果）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 声明一个父类</span></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Human</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 声明两个子类</span></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Man</span> <span class="keyword">extends</span> <span class="title">Human</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Woman</span> <span class="keyword">extends</span> <span class="title">Human</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 三个重载方法，参数类型分别为以上三种类型</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Human human)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"human say Hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Man man)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"man say Hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Woman woman)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"woman say Hello"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Human man = <span class="keyword">new</span> Man();</span><br><span class="line">        Human woman = <span class="keyword">new</span> Woman();</span><br><span class="line">        sayHello(man);</span><br><span class="line">        sayHello(woman);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;以上代码的输出结果如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">human say Hello</span><br><span class="line">human say Hello</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;根据结果可以看到，最终都调用了参数为父类型<code>Man</code>的<code>sayHello</code>方法。这是为什么呢？这是因为<strong>对重载方法的选择，是根据变量的静态类型来确定的，而不是实际类型</strong>。比如代码<code>Human man = new Man()</code>，<code>Human</code>就是变量<code>man</code>的静态类型，而<code>Man</code>是它的实际类型。我们都知道，在多态的情况下调用方法，会根据实际类型调用实际对象的方法，但是在重载中，是根据静态类型来确定调用哪一个方法的。在上面的代码中，<code>man</code>和<code>woman</code>对象的静态类型都是<code>Human</code>，所以都调用<code>static void sayHello(Human human)</code>方法。和调用重写方法不同，由于一个对象的静态类型在编译期间就可以确定，所以调用哪个重载方法是在编译期就确定好了，这叫<strong>静态分派</strong>，而调用重写的方法却要在运行时才能确定具体类型，这叫<strong>动态分派</strong>。</p>
+<br>
+
+<h3 id="emsp-2-3-重载调用的优先级"><a href="#emsp-2-3-重载调用的优先级" class="headerlink" title="&emsp;2.3 重载调用的优先级"></a>&emsp;2.3 重载调用的优先级</h3><p>&emsp;&emsp;接下来，我们再来看一个更加复杂的情况，如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(<span class="keyword">char</span> arg)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, char"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, int"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(<span class="keyword">long</span> arg)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, long"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Character arg)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, Character"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Serializable org)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, Serializable"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(Object arg)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, object"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(<span class="keyword">char</span>... org)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello, char..."</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        sayHello(<span class="string">'a'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;上面对<code>sayHello</code>方法重载了七次，这七个重载方法都只有一个参数，但是参数的类型各不相同。在<code>main</code>方法中，我们调用<code>sayHello</code>方法，并传入一个字符<code>&#39;a&#39;</code>，结果不出意料，输出如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, char"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;这个结果应该不会有意外，毕竟<code>&#39;a&#39;</code>就是一个字符，调用参数为<code>char</code>的方法合情合理。接着，我们将<code>sayHello(char arg)</code>方法注释掉，再来看看运行结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, int"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;当参数为<code>char</code>的方法被注释后，编译器选择了参数为<code>int</code>的方法。这也不难理解，这里发生了自动类型转换，将字符<code>a</code>转换成了它的<code>Unicode</code>编码（97），因此调用<code>sayHello(int arg)</code>是合适的。接着，我们将<code>sayHello(int arg)</code>也注释掉，看看输出结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, long"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;这时候调用了参数类型为<code>long</code>的方法，也就是说这里发生了两次转换，先将<code>a</code>转换成<code>int</code>类型的<code>97</code>，再将<code>97</code>转换为<code>long</code>类型的<code>97L</code>，接着再调用相应的方法。上面的代码中我没有写参数为<code>float</code>和<code>double</code>的方法，不然这种转换还会继续，而顺序是<code>char-&gt;int-&gt;long-&gt;float-&gt;double</code>。但是不会被转换成<code>byte</code>和<code>short</code>，因为这不是安全的转换，<code>byte</code>只有一个字节，而<code>char</code>有两个字节，所以不行；而<code>short</code>虽然有两个字节，但是有一半是负数，<code>char</code>的编码不存在负数，所以也不行。好了，接下来我们将<code>sayHello(long arg)</code>也注释，看看结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, Character"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;根据结果可以发现，这里发生了一次自动装箱，将<code>a</code>封装成了一个<code>Character</code>对象，然后调用了相应的方法。这也是合情合理的。然后，我们再注释<code>sayHello(Character arg)</code>方法，再次运行：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, Serializable"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;先在这个结果就有一点迷惑了，这么连<code>Serializable</code>都行？这是因为<code>Character</code>类实现了<code>Serializable</code>接口，也就是说这里发生了两次转换，先将<code>&#39;a&#39;</code>封装成<code>Character</code>对象，再转型成为它的父类型<code>Serializable</code>。所以，当我们调用重载的方法时，如果不存在对应的类型，则编译器会从下往上，依次寻找当前类型的父类型，直到找到第一个父类型满足某一个重载方法为止，若直到最后都没有找到，就会编译错误。<code>Character</code>类实现了两个接口，一个是<code>Serializable</code>，一个是<code>Comparable&lt;Character&gt;</code>，如果同时存在这两个参数类型的重载方法，编译器将会报错，因为这两个类型是同级别的，不知道该选择哪一个。这种情况下，我们可以使用显示的类型转换，来选择需要调用的方法。好了，我们现在将<code>sayHello(Serializable org)</code>也注释，看看结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, object"</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，这时候调用了参数类型为<code>Object</code>的重载方法。这正好验证了我们上面说的结论——从下往上寻找父类型的重载方法，因为<code>Object</code>就是所有类的父类（除了<code>Object</code>本身）。然后，我们再注释<code>sayHello(Object arg)</code> ：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"hello, char..."</span></span><br></pre></td></tr></table></figure>
+
+<p>&emsp;&emsp;可以看到，调用了可变参数类型的方法，这时候的<code>a</code>被当成了一个数组元素。所以，可变成参数类型的优先级是最低的。如果此时还有一个<code>sayHello(int... org)</code>，则在注释完<code>sayHello(char... org)</code>后，将调用它，正好又对应上了我们前面说的  <code>char-&gt;int-&gt;long-&gt;float-&gt;double</code>的顺序，这个顺序在可变长类型中也适用。</p>
+<p>&emsp;&emsp;说到这里，我们应该能够明白，<strong>在方法调用有多个选择的情况下，编译器总是会根据优先级，选择最适合的那个</strong>。而关于这个优先级如何决定，可以去看看<code>Java</code>语言规范，其中对这部分做了详细规定。</p>
+<br>
+
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>&emsp;&emsp;说了这么多，最关键的一点还是：重载是根据变量的静态类型进行选择的。只要理解了这一点，对于重载也就很容易弄懂了。最后还要说一点，无论对重载理解有多么深刻，想最后一个例子中这样模棱两可的代码还是不要写为好，毕竟可（rong）读（yi）性（ai）太（da）差了。希望这篇博客对想要了解重载的人有所帮助吧。</p>
+<br>
+
+<h2 id="四、参考"><a href="#四、参考" class="headerlink" title="四、参考"></a>四、参考</h2><ul>
+<li>《深入理解Java虚拟机》</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-03-18T11:34:16.038Z" itemprop="dateUpdated">2020-03-18 19:34:16</time>
+</span><br>
+
+
+        
+        世界是个球，前方总有路！
+        
+    </div>
+    
+    <footer>
+        <a href="http://tewuyiang.github.io">
+            <img src="/img/avatar.jpg" alt="特务依昂">
+            特务依昂
+        </a>
+    </footer>
+</blockquote>
+
+        
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&title=《深入理解Java中方法重载的实现原理》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&title=《深入理解Java中方法重载的实现原理》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《深入理解Java中方法重载的实现原理》 — 博客主页&url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/JVM基础——类加载器与双亲委派模型/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">JVM基础——类加载器与双亲委派模型</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>特务依昂 &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&title=《深入理解Java中方法重载的实现原理》 — 博客主页&pic=http://tewuyiang.github.io/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&title=《深入理解Java中方法重载的实现原理》 — 博客主页&source=一个未来程序员的博客~~~" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《深入理解Java中方法重载的实现原理》 — 博客主页&url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/&via=http://tewuyiang.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://tewuyiang.github.io/深入理解Java方法重载的实现原理/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '人呢，怎么不见了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!欢迎回来!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
