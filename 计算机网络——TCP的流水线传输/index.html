@@ -29,17 +29,17 @@
 <meta property="og:site_name" content="博客主页">
 <meta property="og:description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205025935-1047326744.png">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png">
-<meta property="og:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205214500-969506490.png">
-<meta property="og:updated_time" content="2020-03-09T12:56:15.270Z">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//1.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//2.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//3.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//1.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//3.png">
+<meta property="og:image" content="http://tewuyiang.github.io/.io//4.png">
+<meta property="og:updated_time" content="2020-03-18T12:10:36.269Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="计算机网络——TCP的流水线传输">
 <meta name="twitter:description" content="一、前言&amp;emsp;&amp;emsp;前两天看完了《计算机网络——自顶向下方法》这本书的运输层部分，看完后发现TCP协议太过复杂，所以想写一下TCP的系列博客来加深印象，而这是其中的第三篇。这一篇博客就来谈一谈流水线传输的实现原理，以及TCP是如何实现流水线传输的。   二、正文&amp;emsp;2.1 什么是流水线传输以及为什么需要它&amp;emsp;&amp;emsp;在谈流水线传输之前，我们先来说一说不用流水线传输是">
-<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png">
+<meta name="twitter:image" content="http://tewuyiang.github.io/.io//1.png">
     
     <link rel="shortcut icon" href="/img/title.png">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
@@ -228,7 +228,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png" alt title>
+                    <img src="/.io//1.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -254,7 +254,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205025935-1047326744.png" alt title>
+                    <img src="/.io//2.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -276,7 +276,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png" alt title>
+                    <img src="/.io//3.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -296,7 +296,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309204956356-590430980.png" alt title>
+                    <img src="/.io//1.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -306,7 +306,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205108730-662308800.png" alt title>
+                    <img src="/.io//3.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -330,7 +330,7 @@
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://img2020.cnblogs.com/blog/1324014/202003/1324014-20200309205214500-969506490.png" alt title>
+                    <img src="/.io//4.png" alt title>
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -362,7 +362,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2020-03-09T12:56:15.270Z" itemprop="dateUpdated">2020-03-09 20:56:15</time>
+    最后更新时间：<time datetime="2020-03-18T12:10:36.269Z" itemprop="dateUpdated">2020-03-18 20:10:36</time>
 </span><br>
 
 
